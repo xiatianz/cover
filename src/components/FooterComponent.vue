@@ -16,13 +16,22 @@
     </div>
     <div class="mt-2 space-x-2">
       <span>© 2024</span>
-      <a href="https://bsgun.cn" 
+      <a href="https://ehon.cn" 
          target="_blank"
-         class="font-bold text-green-600 hover:text-gray-600 transition-colors">梦爱吃鱼</a>
-      <a v-if="icpNumber" 
-         href="https://beian.miit.gov.cn/" 
-         target="_blank"
-         class="font-bold text-green-600 hover:text-gray-600 transition-colors">{{ icpNumber }}</a>
+         class="font-bold text-green-600 hover:text-gray-600 transition-colors">Cover-Wave</a>
+      <div class="inline-flex items-center gap-1">
+        <a v-if="icpNumber"
+           href="https://beian.miit.gov.cn/" 
+           target="_blank"
+           class="font-bold text-green-600 hover:text-gray-600 transition-colors">{{ icpNumber }}</a>
+        <a v-if="policeNumber"
+           :href="`https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=${policeNumber.match(/\d+/)[0]}`"
+           target="_blank"
+           class="font-bold text-green-600 hover:text-gray-600 transition-colors flex items-center gap-1">
+          <img :src="policeIconPath" alt="公安备案图标" class="w-4 h-4 inline-block">
+          {{ policeNumber }}
+        </a>
+      </div>
       <button class="text-pink-500 font-bold" @click="toggleTips">小提示</button>
     </div>
     
@@ -48,7 +57,9 @@ export default {
   data() {
     return {
       showTipsPopup: false,
-      icpNumber: import.meta.env.VITE_APP_ICP_NUMBER
+      icpNumber: import.meta.env.VITE_APP_ICP_NUMBER,
+      policeNumber: import.meta.env.VITE_APP_POLICE_NUMBER,
+      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/public/police-icon.png'
     };
   },
   methods: {
