@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# 网站地图
+Sitemap: https://58sb.cn/sitemap.xml
+
+# 禁止抓取的路径（如果有的话）
+# Disallow: /admin/
+# Disallow: /api/
+
+# 爬虫延迟（可选）
+Crawl-delay: 1
