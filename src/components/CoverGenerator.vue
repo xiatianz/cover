@@ -278,7 +278,7 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex gap-3">
+      <div class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1 flex gap-2">
           <button 
             @click="saveImage"

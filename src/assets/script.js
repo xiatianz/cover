@@ -652,14 +652,16 @@ function handleIconMouseUp() {
 }
 
 function handleIconTouchStart(e) {
-    e.preventDefault();
     const pos = getTouchPos(e);
     
     if (isPointInIcon(pos.x, pos.y)) {
+        // 只有点击到图标时才阻止默认行为和开始拖拽
+        e.preventDefault();
         state.isDragging = true;
         state.dragStartX = pos.x;
         state.dragStartY = pos.y;
     }
+    // 如果没有点击到图标，不阻止默认行为，允许页面滚动
 }
 
 function handleIconTouchMove(e) {
@@ -686,7 +688,10 @@ function handleIconTouchMove(e) {
 }
 
 function handleIconTouchEnd(e) {
-    e.preventDefault();
+    // 只有在真正拖拽时才阻止默认行为
+    if (state.isDragging) {
+        e.preventDefault();
+    }
     state.isDragging = false;
 }
 
