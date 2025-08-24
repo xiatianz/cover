@@ -559,27 +559,38 @@ function setupIconDragListeners() {
 
 function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
+    // 计算画布的实际缩放比例
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
     return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
     };
 }
 
 function getTouchPos(e) {
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
+    // 计算画布的实际缩放比例
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
     return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
     };
 }
 
 function isPointInIcon(x, y) {
     if (!state.squareImageUrl) return false;
     
+    // 使用与drawSquareImage完全相同的计算逻辑
     const totalSize = state.squareSize * state.canvasScale;
-    const iconX = (canvas.width - totalSize) / 2 + state.iconOffsetX;
-    const iconY = (canvas.height - totalSize) / 2 + state.iconOffsetY;
+    const baseX = (canvas.width - totalSize) / 2;
+    const baseY = (canvas.height - totalSize) / 2;
+    const iconX = baseX + state.iconOffsetX;
+    const iconY = baseY + state.iconOffsetY;
     
     return x >= iconX && x <= iconX + totalSize &&
            y >= iconY && y <= iconY + totalSize;
@@ -615,10 +626,14 @@ function handleIconMouseMove(e) {
     
     // 更新图标偏移量，限制在画布范围内
     const totalSize = state.squareSize * state.canvasScale;
-    const maxOffsetX = canvas.width / 2 - totalSize / 2;
-    const maxOffsetY = canvas.height / 2 - totalSize / 2;
-    const minOffsetX = -canvas.width / 2 + totalSize / 2;
-    const minOffsetY = -canvas.height / 2 + totalSize / 2;
+    const baseX = (canvas.width - totalSize) / 2;
+    const baseY = (canvas.height - totalSize) / 2;
+    
+    // 计算允许的偏移范围
+    const maxOffsetX = canvas.width - baseX - totalSize;
+    const maxOffsetY = canvas.height - baseY - totalSize;
+    const minOffsetX = -baseX;
+    const minOffsetY = -baseY;
     
     state.iconOffsetX = Math.max(minOffsetX, Math.min(maxOffsetX, state.iconOffsetX + deltaX));
     state.iconOffsetY = Math.max(minOffsetY, Math.min(maxOffsetY, state.iconOffsetY + deltaY));
