@@ -8,9 +8,9 @@
   
   <!-- 上传进度和结果弹窗 -->
   <div v-if="showModal" 
-       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
        @click.self="closeModal">
-    <div class="bg-white rounded-lg shadow-xl w-[90%] max-w-[600px] max-h-[80vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-[500px] max-h-[85vh] overflow-y-auto">
       <!-- 弹窗头部 -->
       <div class="flex items-center justify-between p-4 border-b">
         <h3 class="text-lg font-semibold">{{ isUploading ? '正在上传图片' : (isSuccess ? '上传成功' : '上传失败') }}</h3>
@@ -94,6 +94,14 @@ export default {
     canvasId: {
       type: String,
       required: true
+    },
+    currentFormat: {
+      type: String,
+      default: 'png'
+    },
+    jpgQuality: {
+      type: Number,
+      default: 0.9
     }
   },
   data() {
@@ -105,31 +113,42 @@ export default {
       uploadedImageUrl: '',
       isSuccess: false,
       errorMessage: '',
-      showCopyTip: false
+      showCopyTip: false,
+      formatUrls: {}
     }
   },
   computed: {
     linkFormats() {
-      if (!this.uploadedImageUrl) return [];
+      if (!this.uploadedImageUrl && Object.keys(this.formatUrls).length === 0) return [];
       
-      return [
-        {
-          name: 'URL',
-          value: this.uploadedImageUrl
-        },
-        {
-          name: 'Markdown',
-          value: `![image](${this.uploadedImageUrl})`
-        },
-        {
-          name: 'HTML',
-          value: `<img src="${this.uploadedImageUrl}" alt="image" />`
-        },
-        {
-          name: 'BBCode',
-          value: `[img]${this.uploadedImageUrl}[/img]`
-        }
-      ];
+      const formats = [];
+      const currentUrl = this.formatUrls[this.currentFormat] || this.uploadedImageUrl;
+      
+      if (currentUrl) {
+        const formatName = this.currentFormat.toUpperCase();
+        
+        formats.push({
+          name: `${formatName} - 直链`,
+          value: currentUrl
+        });
+        
+        formats.push({
+          name: `${formatName} - Markdown`,
+          value: `![image](${currentUrl})`
+        });
+        
+        formats.push({
+          name: `${formatName} - HTML`,
+          value: `<img src="${currentUrl}" alt="image" />`
+        });
+        
+        formats.push({
+          name: `${formatName} - BBCode`,
+          value: `[img]${currentUrl}[/img]`
+        });
+      }
+      
+      return formats;
     }
   },
   methods: {
@@ -141,41 +160,179 @@ export default {
       this.isSuccess = false;
       this.errorMessage = '';
       this.uploadedImageUrl = '';
+      this.formatUrls = {};
       
       const canvas = document.getElementById(this.canvasId);
-      canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('file', blob, 'cover-image.webp');
+      
+      // 只上传当前选择的格式
+      this.uploadSingleFormat(canvas);
+    },
+    
+    async uploadSingleFormat(canvas) {
+      // 根据当前选择的格式确定上传类型
+      const formatMap = {
+        'png': { type: 'image/png', ext: 'png', name: 'PNG' },
+        'jpg': { type: 'image/jpeg', ext: 'jpg', name: 'JPG' },
+        'svg': { type: 'image/png', ext: 'png', name: 'PNG' }, // SVG以PNG格式上传
+        'ico': { type: 'image/png', ext: 'png', name: 'PNG' }  // ICO以PNG格式上传
+      };
+      
+      const format = formatMap[this.currentFormat] || formatMap['png'];
+      
+      try {
+        const result = await this.uploadFormat(canvas, format);
         
-        // 构建请求URL，将token作为authCode参数，并指定上传到img文件夹
-        const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=img`;
+        this.isUploading = false;
         
-        fetch(uploadUrl, {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          this.isUploading = false;
-          if (data && data.length > 0 && data[0].src) {
-            // 如果返回格式是full，直接使用；否则需要拼接域名
-            const imageUrl = data[0].src.startsWith('http') 
-              ? data[0].src 
-              : `https://img.58sb.cn${data[0].src}`;
-            this.uploadedImageUrl = imageUrl;
-            this.isSuccess = true;
-          } else {
-            this.isSuccess = false;
-            this.errorMessage = '响应格式错误，请检查API配置';
-          }
-        })
-        .catch(error => {
-          this.isUploading = false;
+        if (result.success) {
+          this.isSuccess = true;
+          this.uploadedImageUrl = result.url;
+          // 只存储当前格式的URL
+          this.formatUrls = {};
+          this.formatUrls[this.currentFormat] = result.url;
+        } else {
           this.isSuccess = false;
-          this.errorMessage = error.message || '网络错误，请重试';
-          console.error('上传图片时出错:', error);
-        });
-      }, 'image/webp');
+          this.errorMessage = result.error || '上传失败，请重试';
+        }
+      } catch (error) {
+        this.isUploading = false;
+        this.isSuccess = false;
+        this.errorMessage = error.message || '上传过程中出现错误';
+      }
+    },
+
+    async uploadMultipleFormats(canvas) {
+      const formats = [
+        { type: 'image/png', ext: 'png', name: 'PNG' },
+        { type: 'image/jpeg', ext: 'jpg', name: 'JPG' },
+        { type: 'image/webp', ext: 'webp', name: 'WebP' }
+      ];
+      
+      try {
+        const uploadPromises = formats.map(format => this.uploadFormat(canvas, format));
+        const results = await Promise.all(uploadPromises);
+        
+        this.isUploading = false;
+        
+        // 检查是否有成功的上传
+        const successResults = results.filter(result => result.success);
+        if (successResults.length > 0) {
+          this.isSuccess = true;
+          this.uploadedImageUrl = successResults[0].url; // 主要显示第一个成功的
+          
+          // 存储所有格式的URL
+          successResults.forEach(result => {
+            this.formatUrls[result.format] = result.url;
+          });
+        } else {
+          this.isSuccess = false;
+          this.errorMessage = '所有格式上传失败，请重试';
+        }
+      } catch (error) {
+        this.isUploading = false;
+        this.isSuccess = false;
+        this.errorMessage = error.message || '上传过程中出现错误';
+      }
+    },
+    
+    uploadFormat(canvas, format) {
+      return new Promise((resolve) => {
+        const quality = format.type === 'image/jpeg' ? this.jpgQuality : undefined;
+        
+        // 对于PNG格式，确保保持透明背景
+        if (format.type === 'image/png') {
+          // 创建一个新的canvas来确保透明背景
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d', { alpha: true });
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+          
+          // 不设置背景色，保持透明
+          tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+          tempCtx.drawImage(canvas, 0, 0);
+          
+          tempCanvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('file', blob, `cover-image.${format.ext}`);
+            
+            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=img`;
+            
+            fetch(uploadUrl, {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data && data.length > 0 && data[0].src) {
+                const imageUrl = data[0].src.startsWith('http') 
+                  ? data[0].src 
+                  : `https://img.58sb.cn${data[0].src}`;
+                resolve({
+                  success: true,
+                  url: imageUrl,
+                  format: format.ext,
+                  name: format.name
+                });
+              } else {
+                resolve({
+                  success: false,
+                  format: format.ext,
+                  name: format.name,
+                  error: '响应格式错误'
+                });
+              }
+            })
+            .catch(error => {
+              resolve({
+                success: false,
+                error: error.message || '网络错误'
+              });
+            });
+          }, format.type, quality);
+        } else {
+          // 对于其他格式，使用原来的逻辑
+          canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('file', blob, `cover-image.${format.ext}`);
+            
+            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=img`;
+            
+            fetch(uploadUrl, {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data && data.length > 0 && data[0].src) {
+                const imageUrl = data[0].src.startsWith('http') 
+                  ? data[0].src 
+                  : `https://img.58sb.cn${data[0].src}`;
+                resolve({
+                  success: true,
+                  url: imageUrl,
+                  format: format.ext,
+                  name: format.name
+                });
+              } else {
+                resolve({
+                  success: false,
+                  format: format.ext,
+                  name: format.name,
+                  error: '响应格式错误'
+                });
+              }
+            })
+            .catch(error => {
+              resolve({
+                success: false,
+                format: format.ext,
+                name: format.name,
+                error: error.message
+              });
+            });
+          }, format.type, quality);
+        }
+      });
     },
     
     closeModal() {

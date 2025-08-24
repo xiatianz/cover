@@ -11,7 +11,7 @@ const fonts = [
 
 export const defaultConfig = {
     text: '长夏茶叙',       // 默认文本
-    watermark: '@夏天', // 默认水印
+    watermark: '', // 默认水印为空，用户输入才显示
     fontFamily: import.meta.env.VITE_APP_FONT_FAMILY,
     fontStyles: fonts.map(f => f[2]).filter(Boolean),
     fontOptions: fonts.map(([value, label]) => ({ value, label }))

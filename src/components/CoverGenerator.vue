@@ -279,13 +279,45 @@
 
       <!-- 操作按钮 -->
       <div class="flex gap-3">
-        <button 
-          @click="saveWebp"
-          class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-        >
-          保存图片
-        </button>
-        <ImageUploader canvas-id="canvasPreview" />
+        <div class="flex-1 flex gap-2">
+          <button 
+            @click="saveImage"
+            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+          >
+            保存图片
+          </button>
+          <div class="relative">
+            <button
+              @click="showFormatMenu = !showFormatMenu"
+              class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+              title="选择格式"
+            >
+              {{ currentFormat.toUpperCase() }}
+              <svg class="w-3 h-3 ml-1 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div
+              v-show="showFormatMenu"
+              class="absolute top-full right-0 mt-1 bg-white border rounded-lg shadow-lg py-1 z-10 min-w-[100px]"
+            >
+              <button
+                v-for="format in availableFormats"
+                :key="format.id"
+                @click="selectSaveFormat(format)"
+                class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                :class="currentFormat === format.id ? 'text-green-600 font-medium' : 'text-gray-700'"
+              >
+                {{ format.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <ImageUploader 
+          canvas-id="canvasPreview" 
+          :current-format="currentFormat" 
+          :jpg-quality="jpgQuality"
+        />
         <button 
           @click="openSettings"
           class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -301,15 +333,18 @@
 
     <!-- 画布预览 -->
     <div class="relative w-full lg:flex-[2] overflow-hidden">
-      <canvas 
-        id="canvasPreview" 
-        width="1000" 
-        height="500" 
-        @dragover.prevent="handleCanvasDragOver"
-        @dragleave.prevent="handleCanvasDragLeave"
-        @drop.prevent="handleCanvasDrop" 
-        class="w-full h-auto rounded-lg shadow-md"
-      ></canvas>
+      <div class="w-full max-w-4xl mx-auto">
+        <canvas 
+          id="canvasPreview" 
+          width="1000" 
+          height="500" 
+          @dragover.prevent="handleCanvasDragOver"
+          @dragleave.prevent="handleCanvasDragLeave"
+          @drop.prevent="handleCanvasDrop" 
+          class="w-full h-auto max-h-[70vh] rounded-lg shadow-md border border-gray-200"
+          style="object-fit: contain;"
+        ></canvas>
+      </div>
       <!-- 图标区高亮 -->
       <div
         v-if="dragHighlight === 'icon'"
@@ -333,14 +368,19 @@
     </div>
 
     <!-- 设置模态框 -->
+    <!-- 设置模态框 -->
     <SettingsModal
       v-model="showSettings"
+      @platform-changed="handlePlatformChanged"
+      @formats-changed="handleFormatsChanged"
     />
+
+    <!-- 图标教程弹窗 -->
   </main>
 </template>
 
 <script>
-import { state, updatePreview, saveWebp, drawSquareImage, initialize } from '../assets/script.js';
+import { state, updatePreview, saveWebp, drawSquareImage, initialize, updateCanvasSizes } from '../assets/script.js';
 import { defaultConfig } from '../config';
 import ImageUploader from './ImageUploader.vue';
 import SettingsModal from './SettingsModal.vue';
@@ -357,7 +397,18 @@ export default {
       iconName: '',
       iconUrl: null,
       showSettings: false,
-      dragHighlight: null
+      dragHighlight: null,
+      currentPlatform: null,
+      exportFormats: ['png'],
+      jpgQuality: 0.9,
+      showFormatMenu: false,
+      currentFormat: 'png',
+      availableFormats: [
+        { id: 'png', name: 'PNG' },
+        { id: 'jpg', name: 'JPG' },
+        { id: 'svg', name: 'SVG' },
+        { id: 'ico', name: 'ICO' }
+      ]
     };
   },
   mounted() {
@@ -366,10 +417,12 @@ export default {
     
     // Add click outside listener
     document.addEventListener('click', this.handleClickOutside);
+    document.addEventListener('click', this.handleFormatMenuClickOutside);
   },
   unmounted() {
     // Remove click outside listener
     document.removeEventListener('click', this.handleClickOutside);
+    document.removeEventListener('click', this.handleFormatMenuClickOutside);
   },
   methods: {
     loadStyles() {
@@ -444,8 +497,118 @@ export default {
         state.isFontMenuOpen = false;
       }
     },
+    handleFormatMenuClickOutside(event) {
+      const formatMenu = event.target.closest('.relative');
+      if (!formatMenu || !formatMenu.querySelector('[title="选择格式"]')) {
+        this.showFormatMenu = false;
+      }
+    },
     openSettings() {
       this.showSettings = true;
+    },
+    updateAllCanvasSizes(width, height) {
+      // 调用导入的updateCanvasSizes函数
+      updateCanvasSizes(width, height);
+    },
+    handlePlatformChanged(platform) {
+      this.currentPlatform = platform;
+      // 更新画布尺寸
+      const canvas = document.getElementById('canvasPreview');
+      if (canvas && platform.id !== 'custom') {
+        // 设置画布的实际尺寸
+        canvas.width = platform.width;
+        canvas.height = platform.height;
+        
+        // 更新所有辅助画布的尺寸
+        this.updateAllCanvasSizes(platform.width, platform.height);
+        
+        // 重新绘制画布内容
+        this.updatePreview('resize');
+      }
+    },
+    handleFormatsChanged(formatSettings) {
+      this.exportFormats = formatSettings.formats;
+      this.jpgQuality = formatSettings.jpgQuality;
+    },
+    selectSaveFormat(format) {
+      this.currentFormat = format.id;
+      this.showFormatMenu = false;
+    },
+    saveImage() {
+      const canvas = document.getElementById('canvasPreview');
+      if (!canvas) return;
+      
+      switch (this.currentFormat) {
+        case 'png':
+          this.savePNG(canvas);
+          break;
+        case 'jpg':
+          this.saveJPG(canvas);
+          break;
+        case 'svg':
+          this.saveSVG(canvas);
+          break;
+        case 'ico':
+          this.saveICO(canvas);
+          break;
+        default:
+          this.savePNG(canvas);
+      }
+    },
+    savePNG(canvas) {
+      // 创建高质量PNG
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Cover-Wave-${Date.now()}.png`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/png', 1.0); // 使用最高质量
+    },
+    saveJPG(canvas) {
+      canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Cover-Wave-${Date.now()}.jpg`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/jpeg', this.jpgQuality);
+    },
+    saveSVG(canvas) {
+      // 创建SVG版本
+      const svgData = this.canvasToSVG(canvas);
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Cover-Wave-${Date.now()}.svg`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    },
+    saveICO(canvas) {
+      // 创建ICO格式 (简化版本，实际是PNG)
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 256;
+      tempCanvas.height = 256;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0, 256, 256);
+      
+      tempCanvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Cover-Wave-${Date.now()}.ico`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/png');
+    },
+    canvasToSVG(canvas) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const dataURL = canvas.toDataURL('image/png');
+      
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+  <image href="${dataURL}" width="${width}" height="${height}"/>
+</svg>`;
     }
   }
 };

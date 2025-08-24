@@ -33,6 +33,7 @@
         </a>
       </div>
       <button class="text-pink-500 font-bold" @click="toggleTips">小提示</button>
+      <button class="text-blue-500 font-bold" @click="toggleIconTutorial">图标教程</button>
     </div>
     
     <!-- 小提示弹窗 -->
@@ -49,6 +50,82 @@
         <span class="text-red-500 font-bold">重要提示：请确保您的浏览器和设备性能良好</span>
       </div>
     </div>
+
+    <!-- 图标教程弹窗 -->
+    <div v-if="showIconTutorial" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showIconTutorial = false">
+      <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" @click.stop>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">图标使用教程</h3>
+          <button @click="showIconTutorial = false" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-medium text-gray-800 mb-2">🎯 获取图标的方法</h4>
+            <div class="space-y-2 text-sm text-gray-600">
+              <p><strong>方法一：</strong>点进入 <span class="bg-red-100 text-red-700 px-1 rounded">图标库</span> 之后复制图标代码，输入图标名称</p>
+              <p><strong>方法二：</strong>使用 Iconify、Feather Icons、Heroicons 等图标库</p>
+              <p><strong>方法三：</strong>上传本地 PNG、SVG 格式的图标文件</p>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-medium text-gray-800 mb-2">📝 图标库使用步骤</h4>
+            <div class="space-y-2 text-sm text-gray-600">
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">1</span>
+                <span>访问图标库网站（如 iconify.design）</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</span>
+                <span>搜索并选择喜欢的图标</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">3</span>
+                <span>复制图标代码（如：logos:chrome）</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">4</span>
+                <span>在本工具中输入图标名称</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-medium text-gray-800 mb-2">🎨 图标调整功能</h4>
+            <div class="space-y-2 text-sm text-gray-600">
+              <p>• <strong>拖拽移动：</strong>点击图标可以拖拽调整位置</p>
+              <p>• <strong>尺寸调整：</strong>使用右侧滑块调整图标大小</p>
+              <p>• <strong>颜色修改：</strong>可以修改图标颜色和背景色</p>
+              <p>• <strong>旋转角度：</strong>支持360度旋转调整</p>
+            </div>
+          </div>
+
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 class="font-medium text-yellow-800 mb-2">💡 推荐图标库</h4>
+            <div class="space-y-1 text-sm text-yellow-700">
+              <p>• <strong>Iconify：</strong>iconify.design（最全面）</p>
+              <p>• <strong>Feather Icons：</strong>feathericons.com（简洁风格）</p>
+              <p>• <strong>Heroicons：</strong>heroicons.com（现代设计）</p>
+              <p>• <strong>Tabler Icons：</strong>tabler-icons.io（线性图标）</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <button 
+            @click="showIconTutorial = false"
+            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+          >
+            我知道了
+          </button>
+        </div>
+      </div>
+    </div>
   </footer>
 </template>
 
@@ -57,6 +134,7 @@ export default {
   data() {
     return {
       showTipsPopup: false,
+      showIconTutorial: false,
       icpNumber: import.meta.env.VITE_APP_ICP_NUMBER,
       policeNumber: import.meta.env.VITE_APP_POLICE_NUMBER,
       policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/public/police-icon.png'
@@ -70,6 +148,9 @@ export default {
           this.showTipsPopup = false;
         }, 3000);
       }
+    },
+    toggleIconTutorial() {
+      this.showIconTutorial = !this.showIconTutorial;
     }
   }
 };
