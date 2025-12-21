@@ -3,10 +3,11 @@
 
 // 查询登录状态，用于前端轮询
 
-export default async function onRequest(context) {
+// 使用官方推荐的函数参数格式，通过env访问KV
+export default async function onRequest({ request, params, env }) {
   try {
     // 只处理GET请求
-    if (context.request.method !== 'GET') {
+    if (request.method !== 'GET') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: {
@@ -19,7 +20,7 @@ export default async function onRequest(context) {
     }
     
     // 获取查询参数
-    const url = new URL(context.request.url);
+    const url = new URL(request.url);
     const code = url.searchParams.get('code');
     
     if (!code) {
@@ -38,8 +39,7 @@ export default async function onRequest(context) {
     let challengeDataStr;
     const key = `login_challenge_${code}`;
     try {
-      // 直接调用KV命名空间，不通过context.env
-      challengeDataStr = await COVER_WAVE_KV.get(key);
+      challengeDataStr = await env.COVER_WAVE_KV.get(key);
       console.log(`KV Get Result for ${key}:`, challengeDataStr);
     } catch (kvError) {
       console.error('KV storage error:', kvError);
@@ -82,8 +82,7 @@ export default async function onRequest(context) {
     // 检查挑战码是否过期
     if (Date.now() > challengeData.expiresAt) {
       try {
-        // 直接调用KV命名空间，不通过context.env
-        await COVER_WAVE_KV.delete(`login_challenge_${code}`);
+        await env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
       } catch (kvError) {
         console.error('KV storage error when deleting:', kvError);
       }

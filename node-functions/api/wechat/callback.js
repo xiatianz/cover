@@ -37,11 +37,11 @@ function generateVerificationCode() {
 }
 
 // 微信消息处理主函数
-export default async function onRequest(context) {
+export default async function onRequest({ request, params, env }) {
   try {
     // 处理GET请求 - 微信验证
-    if (context.request.method === 'GET') {
-      const url = new URL(context.request.url);
+    if (request.method === 'GET') {
+      const url = new URL(request.url);
       const signature = url.searchParams.get('signature');
       const timestamp = url.searchParams.get('timestamp');
       const nonce = url.searchParams.get('nonce');
@@ -170,8 +170,8 @@ export default async function onRequest(context) {
     }
     
     // 处理POST请求 - 微信消息
-    if (context.request.method === 'POST') {
-      const xmlStr = await context.request.text();
+    if (request.method === 'POST') {
+      const xmlStr = await request.text();
       const message = parseXml(xmlStr);
       
       const { ToUserName, FromUserName, MsgType, Content } = message;
