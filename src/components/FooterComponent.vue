@@ -138,7 +138,7 @@ export default {
       showIconTutorial: false,
       icpNumber: import.meta.env.VITE_APP_ICP_NUMBER,
       policeNumber: import.meta.env.VITE_APP_POLICE_NUMBER,
-      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/public/police-icon.png',
+      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/tb.png',
       visitCount: 0
     };
   },
