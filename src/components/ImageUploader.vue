@@ -263,8 +263,7 @@ export default {
               headers: {
                 'Authorization': this.uploadToken
               },
-              body: formData,
-              mode: 'cors'
+              body: formData
             })
             .then(response => {
               return response.text();
