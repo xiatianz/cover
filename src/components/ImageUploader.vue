@@ -263,7 +263,9 @@ export default {
               headers: {
                 'Authorization': this.uploadToken
               },
-              body: formData
+              body: formData,
+              mode: 'cors',
+              credentials: 'include'
             })
             .then(response => {
               return response.text();
@@ -323,42 +325,66 @@ export default {
             const formData = new FormData();
             formData.append('file', blob, `cover-image.${format.ext}`);
             
-            const uploadUrl = `${this.uploadApiUrl}?returnFormat=full&uploadFolder=cover`;
+            const uploadUrl = `${this.uploadApiUrl}?returnFormat=full&uploadFolder=cover&uploadNameType=short&serverCompress=true`;
             
             fetch(uploadUrl, {
               method: 'POST',
               headers: {
                 'Authorization': this.uploadToken
               },
-              body: formData
+              body: formData,
+              mode: 'cors',
+              credentials: 'include'
             })
-            .then(response => response.json())
-            .then(data => {
-              if (data && data.length > 0 && data[0].src) {
-                const imageUrl = data[0].src.startsWith('http') 
-                  ? data[0].src 
-                  : `${this.imageDomain}${data[0].src}`;
-                resolve({
-                  success: true,
-                  url: imageUrl,
-                  format: format.ext,
-                  name: format.name
-                });
-              } else {
+            .then(response => {
+              return response.text();
+            })
+            .then(text => {
+              // 检查是否为 "Unauthorized" 字符串
+              if (text.trim() === 'Unauthorized') {
                 resolve({
                   success: false,
                   format: format.ext,
                   name: format.name,
-                  error: '响应格式错误'
+                  error: '认证失败: 上传token无效或已过期'
+                });
+                return;
+              }
+              
+              // 尝试解析JSON
+              try {
+                const data = JSON.parse(text);
+                if (Array.isArray(data) && data.length > 0 && data[0].src) {
+                  const imageUrl = data[0].src.startsWith('http') 
+                    ? data[0].src 
+                    : `${this.imageDomain}${data[0].src}`;
+                  resolve({
+                    success: true,
+                    url: imageUrl,
+                    format: format.ext,
+                    name: format.name
+                  });
+                } else {
+                  resolve({
+                    success: false,
+                    format: format.ext,
+                    name: format.name,
+                    error: `响应格式错误: ${JSON.stringify(text)}`
+                  });
+                }
+              } catch (e) {
+                resolve({
+                  success: false,
+                  format: format.ext,
+                  name: format.name,
+                  error: `服务器返回无效响应: ${text}`
                 });
               }
             })
             .catch(error => {
               resolve({
                 success: false,
-                format: format.ext,
-                name: format.name,
-                error: error.message
+                error: `网络请求失败: ${error.message || '未知错误'}`
               });
             });
           }, format.type, quality);
