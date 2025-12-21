@@ -52,7 +52,7 @@ export default async function onRequest({ request, params, env }) {
     // 从KV获取挑战码
     let challengeDataStr;
     try {
-      challengeDataStr = await env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+      challengeDataStr = await COVER_WAVE_KV.get(`login_challenge_${code}`);
     } catch (kvError) {
       console.error('KV storage error when getting challenge:', kvError);
       return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
@@ -84,7 +84,7 @@ export default async function onRequest({ request, params, env }) {
     if (Date.now() > challengeData.expiresAt) {
       // 删除过期挑战码
       try {
-        await env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+        await COVER_WAVE_KV.delete(`login_challenge_${code}`);
       } catch (kvError) {
         console.error('KV storage error when deleting expired challenge:', kvError);
       }
@@ -120,7 +120,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
+      await COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
         userId: openid, // 使用openid作为用户ID
         expiresAt: authExpiresAt,
         loginMethod: 'wechat_mp'
@@ -140,9 +140,9 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const userDataStr = await env.COVER_WAVE_KV.get(`user_${openid}`);
+      const userDataStr = await COVER_WAVE_KV.get(`user_${openid}`);
       if (!userDataStr) {
-        await env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
+        await COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
           userId: openid,
           createdAt: Date.now(),
           lastLoginAt: Date.now(),
@@ -151,7 +151,7 @@ export default async function onRequest({ request, params, env }) {
       } else {
         // 更新最后登录时间
         const userData = JSON.parse(userDataStr);
-        await env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
+        await COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
           ...userData,
           lastLoginAt: Date.now()
         }));
@@ -163,7 +163,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 更新挑战码状态为成功
     try {
-      await env.COVER_WAVE_KV.put(`login_challenge_${code}`, JSON.stringify({
+      await COVER_WAVE_KV.put(`login_challenge_${code}`, JSON.stringify({
         ...challengeData,
         status: 'success',
         openid: openid,

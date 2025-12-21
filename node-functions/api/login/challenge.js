@@ -29,8 +29,8 @@ export default async function onRequest({ request, params, env }) {
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
     // 检查KV存储是否可用
-    if (!env || !env.COVER_WAVE_KV) {
-      console.error('KV storage not configured: env.COVER_WAVE_KV is undefined');
+    if (typeof COVER_WAVE_KV === 'undefined') {
+      console.error('KV storage not configured: COVER_WAVE_KV is undefined');
       // 即使KV不可用，也返回挑战码，后续登录流程会处理
       return new Response(JSON.stringify({
         success: true,
@@ -50,8 +50,8 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储挑战码到KV
     try {
-      // 通过env访问KV，符合官方推荐方式
-      await env.COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
+      // 直接使用全局变量访问KV，符合EdgeOne Functions规范
+      await COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
         sessionId,
         expiresAt,
         status: 'pending', // pending, success, failed

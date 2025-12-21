@@ -33,8 +33,8 @@ export default async function onRequest({ request, params, env }) {
         let challengeDataStr;
         try {
           // 通过env访问KV，符合官方推荐方式
-          if (env && env.COVER_WAVE_KV) {
-            challengeDataStr = await env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+          if (typeof COVER_WAVE_KV !== 'undefined') {
+            challengeDataStr = await COVER_WAVE_KV.get(`login_challenge_${code}`);
           }
         } catch (error) {
           console.error('KV get error:', error);
@@ -57,8 +57,8 @@ export default async function onRequest({ request, params, env }) {
           // 删除过期挑战码
           try {
             // 通过env访问KV，符合官方推荐方式
-            if (env && env.COVER_WAVE_KV) {
-              await env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+            if (typeof COVER_WAVE_KV !== 'undefined') {
+              await COVER_WAVE_KV.delete(`login_challenge_${code}`);
             }
           } catch (error) {
             console.error('KV delete error:', error);

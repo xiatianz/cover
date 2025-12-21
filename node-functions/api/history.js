@@ -18,7 +18,7 @@ export default async function onRequest({ request, params, env }) {
   }
   
   // 从KV获取认证信息
-  const authDataStr = await env.COVER_WAVE_KV.get(`auth_${authToken}`);
+  const authDataStr = await COVER_WAVE_KV.get(`auth_${authToken}`);
   if (!authDataStr) {
     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid auth token' }), {
       status: 401,
@@ -30,7 +30,7 @@ export default async function onRequest({ request, params, env }) {
   
   // 检查令牌是否过期
   if (Date.now() > authData.expiresAt) {
-    await env.COVER_WAVE_KV.delete(`auth_${authToken}`);
+    await COVER_WAVE_KV.delete(`auth_${authToken}`);
     return new Response(JSON.stringify({ error: 'Unauthorized: Auth token expired' }), {
       status: 401,
       headers: getCorsHeaders()
@@ -41,17 +41,17 @@ export default async function onRequest({ request, params, env }) {
   
   // 处理GET请求 - 获取历史记录
   if (request.method === 'GET') {
-    return handleGetHistory({ request, env }, userId);
+    return handleGetHistory(userId);
   }
   
   // 处理POST请求 - 添加历史记录
   if (request.method === 'POST') {
-    return handleAddHistory({ request, env }, userId);
+    return handleAddHistory(request, userId);
   }
   
   // 处理DELETE请求 - 清除历史记录
   if (request.method === 'DELETE') {
-    return handleClearHistory({ request, env }, userId);
+    return handleClearHistory(userId);
   }
   
   return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -61,10 +61,10 @@ export default async function onRequest({ request, params, env }) {
 }
 
 // 处理GET请求 - 获取历史记录
-async function handleGetHistory({ env }, userId) {
+async function handleGetHistory(userId) {
   try {
     // 获取用户数据
-    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
     if (!userDataStr) {
       return new Response(JSON.stringify({
         success: true,
@@ -94,7 +94,7 @@ async function handleGetHistory({ env }, userId) {
 }
 
 // 处理POST请求 - 添加历史记录
-async function handleAddHistory({ request, env }, userId) {
+async function handleAddHistory(request, userId) {
   try {
     const record = await request.json();
     
@@ -106,7 +106,7 @@ async function handleAddHistory({ request, env }, userId) {
     }
     
     // 获取用户数据
-    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
     let userData = {
       userId,
       createdAt: Date.now(),
@@ -132,7 +132,7 @@ async function handleAddHistory({ request, env }, userId) {
     }
     
     // 更新用户数据
-    await env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
     
     return new Response(JSON.stringify({
       success: true,
@@ -151,10 +151,10 @@ async function handleAddHistory({ request, env }, userId) {
 }
 
 // 处理DELETE请求 - 清除历史记录
-async function handleClearHistory({ env }, userId) {
+async function handleClearHistory(userId) {
   try {
     // 获取用户数据
-    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
     if (!userDataStr) {
       return new Response(JSON.stringify({
         success: true,
@@ -171,7 +171,7 @@ async function handleClearHistory({ env }, userId) {
     userData.history = [];
     
     // 更新用户数据
-    await env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
     
     return new Response(JSON.stringify({
       success: true,

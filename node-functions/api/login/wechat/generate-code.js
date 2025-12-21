@@ -28,7 +28,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储验证码到KV
     try {
-      await env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
+      await COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
         code,
         expiresAt,
         used: false

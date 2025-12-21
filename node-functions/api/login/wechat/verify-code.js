@@ -50,7 +50,7 @@ export default async function onRequest({ request, params, env }) {
     // 从KV获取验证码
     let codeDataStr;
     try {
-      codeDataStr = await env.COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
+      codeDataStr = await COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
     } catch (kvError) {
       console.error('KV storage error when getting wechat code:', kvError);
       return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
@@ -82,7 +82,7 @@ export default async function onRequest({ request, params, env }) {
     if (Date.now() > codeData.expiresAt) {
       // 删除过期验证码
       try {
-        await context.env.COVER_WAVE_KV.delete(`wechat_code_${sessionId}`);
+        await COVER_WAVE_KV.delete(`wechat_code_${sessionId}`);
       } catch (kvError) {
         console.error('KV storage error when deleting expired code:', kvError);
       }
@@ -125,7 +125,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 标记验证码为已使用
     try {
-      await context.env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
+      await COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
         ...codeData,
         used: true
       }));
@@ -145,7 +145,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await context.env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
+      await COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
         userId,
         expiresAt: authExpiresAt,
         loginMethod: 'wechat'
@@ -165,9 +165,9 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
+      const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
       if (!userDataStr) {
-        await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
+        await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
           userId,
           createdAt: Date.now(),
           lastLoginAt: Date.now(),
@@ -176,7 +176,7 @@ export default async function onRequest({ request, params, env }) {
       } else {
         // 更新最后登录时间
         const userData = JSON.parse(userDataStr);
-        await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
+        await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
           ...userData,
           lastLoginAt: Date.now()
         }));
