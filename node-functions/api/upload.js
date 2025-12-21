@@ -52,6 +52,13 @@ export default async function onRequestPost({ request, params, env }) {
 
     console.log('Sending request to:', url.toString());
     
+    // 添加调试日志
+    console.log('Upload token:', uploadToken ? 'Present' : 'Missing');
+    console.log('Image domain:', imageDomain);
+    console.log('Request headers:', {
+      'Authorization': uploadToken ? 'Present' : 'Missing'
+    });
+
     // 设置请求超时时间（30秒）
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
@@ -60,20 +67,26 @@ export default async function onRequestPost({ request, params, env }) {
     });
 
     // 转发请求到图床API，带有超时控制
+    // 尝试添加keepalive和调整请求模式
     const response = await Promise.race([
       fetch(url, { 
         method: 'POST',
         headers: {
           'Authorization': uploadToken // 恢复原来的认证方式，不使用Bearer前缀
         },
-        body: newFormData
+        body: newFormData,
+        // 添加这些选项可能有助于解决EdgeOne环境下的问题
+        keepalive: true,
+        redirect: 'follow',
+        cache: 'no-store'
       }),
       timeoutPromise
     ]);
 
     // 获取响应内容
     const text = await response.text();
-    console.log('Response from image bed:', { status: response.status, text });
+    console.log('Response from image bed:', { status: response.status, text: text.substring(0, 200) + (text.length > 200 ? '...' : '') });
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     let data;
 
