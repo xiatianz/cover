@@ -380,7 +380,7 @@
 </template>
 
 <script>
-import { state, updatePreview, saveWebp, drawSquareImage, initialize, updateCanvasSizes } from '../assets/script.js';
+import { state, updatePreview, saveWebp, drawSquareImage, drawText, drawWatermark, initialize, updateCanvasSizes } from '../assets/script.js';
 import { defaultConfig } from '../config';
 import ImageUploader from './ImageUploader.vue';
 import SettingsModal from './SettingsModal.vue';
@@ -495,11 +495,7 @@ export default {
     selectFont(fontValue) {
       state.selectedFont = fontValue;
       state.isFontMenuOpen = false;
-      // 直接调用drawText和drawWatermark函数，确保字体立即更新
-      import('../assets/script.js').then(({ drawText, drawWatermark }) => {
-        drawText();
-        drawWatermark();
-      });
+      this.updatePreview('font', { target: { value: fontValue } });
     },
     handleClickOutside(event) {
       const dropdown = document.querySelector('.relative');
