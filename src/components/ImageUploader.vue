@@ -106,7 +106,7 @@ export default {
   },
   data() {
     return {
-      uploadApiUrl: import.meta.env.VITE_APP_UPLOAD_API_URL,
+      uploadApiUrl: '/api/upload',
       imageDomain: import.meta.env.VITE_APP_IMAGE_DOMAIN || 'https://img.58sb.cn',
       uploadToken: import.meta.env.VITE_APP_UPLOAD_TOKEN,
       showModal: false,
@@ -315,21 +315,16 @@ export default {
             });
           }, format.type, quality);
         } else {
-          // 对于其他格式，使用原来的逻辑
+          // 对于其他格式，同样使用代理路径
           canvas.toBlob(blob => {
             const formData = new FormData();
             formData.append('file', blob, `cover-image.${format.ext}`);
             
-            const uploadUrl = `${this.uploadApiUrl}?returnFormat=full&uploadFolder=cover&uploadNameType=short&serverCompress=true`;
+            const uploadUrl = this.uploadApiUrl;
             
             fetch(uploadUrl, {
               method: 'POST',
-              headers: {
-                'Authorization': this.uploadToken
-              },
-              body: formData,
-              mode: 'cors',
-              credentials: 'include'
+              body: formData
             })
             .then(response => {
               return response.text();
@@ -350,9 +345,25 @@ export default {
               try {
                 const data = JSON.parse(text);
                 if (Array.isArray(data) && data.length > 0 && data[0].src) {
-                  const imageUrl = data[0].src.startsWith('http') 
-                    ? data[0].src 
-                    : `${this.imageDomain}${data[0].src}`;
+                  // 检查响应中的URL是否已经是完整URL，如果不是则拼接展示域名
+                  let imageUrl = data[0].src;
+                  if (!imageUrl.startsWith('http')) {
+                    // 检查是否已经有斜杠开头
+                    if (imageUrl.startsWith('/')) {
+                      imageUrl = `${this.imageDomain}${imageUrl}`;
+                    } else {
+                      imageUrl = `${this.imageDomain}/${imageUrl}`;
+                    }
+                  } else {
+                    // 如果已经是完整URL，使用展示域名替换原始域名
+                    try {
+                      const url = new URL(imageUrl);
+                      const origin = url.origin;
+                      imageUrl = imageUrl.replace(origin, this.imageDomain);
+                    } catch (e) {
+                      console.error('Invalid URL:', imageUrl, e);
+                    }
+                  }
                   resolve({
                     success: true,
                     url: imageUrl,

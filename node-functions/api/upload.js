@@ -73,8 +73,31 @@ export default async function onRequestPost(context) {
       throw new Error(`Invalid response from image bed: ${text}`);
     }
 
+    // 处理返回的数据，替换为展示域名
+    let processedData = data;
+    if (Array.isArray(processedData)) {
+      processedData = processedData.map(item => {
+        if (item.src && typeof item.src === 'string') {
+          // 检查是否为完整URL
+          if (item.src.startsWith('http')) {
+            // 替换为展示域名
+            const url = new URL(item.src);
+            const origin = url.origin;
+            item.src = item.src.replace(origin, imageDomain);
+          } else {
+            // 处理相对路径
+            if (!item.src.startsWith('/')) {
+              item.src = `/${item.src}`;
+            }
+            item.src = `${imageDomain}${item.src}`;
+          }
+        }
+        return item;
+      });
+    }
+    
     // 返回响应
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(processedData), {
       status: response.status,
       headers: {
         'Content-Type': 'application/json',
