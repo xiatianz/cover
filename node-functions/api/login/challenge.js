@@ -50,6 +50,7 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储挑战码到KV
     try {
+      // 通过env访问KV，符合官方推荐方式
       await env.COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
         sessionId,
         expiresAt,

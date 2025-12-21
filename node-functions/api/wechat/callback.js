@@ -3,19 +3,19 @@
 
 // 处理微信公众号消息推送，支持用户发送"获取"获取验证码
 
-// 微信消息解析工具函数
+// 微信消息解析工具函数 - 使用纯JavaScript实现，不依赖DOM API
 function parseXml(xmlStr) {
   const result = {};
-  const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  const root = xml.documentElement;
-  
-  for (let i = 0; i < root.childNodes.length; i++) {
-    const node = root.childNodes[i];
-    if (node.nodeType === 1) {
-      result[node.nodeName] = node.textContent;
-    }
+  // 简单的XML解析，仅处理微信消息格式
+  const tagRegex = /<([^>]+)>([^<]*)<\/\1>/g;
+  let match;
+  while ((match = tagRegex.exec(xmlStr)) !== null) {
+    const tagName = match[1];
+    const tagValue = match[2];
+    // 处理CDATA内容
+    const cdataMatch = tagValue.match(/<!\[CDATA\[(.*?)\]\]>/s);
+    result[tagName] = cdataMatch ? cdataMatch[1] : tagValue;
   }
-  
   return result;
 }
 

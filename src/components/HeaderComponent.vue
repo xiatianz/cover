@@ -156,8 +156,8 @@ export default {
                 const data = await response.json();
                 if (data.success) {
                     this.challenge = data.challenge;
-                    // 开始轮询登录状态
-                    this.startPollingLoginStatus();
+                    // 建立WebSocket连接，替代轮询
+                    this.startWebSocketLoginStatus();
                 } else {
                     throw new Error('Failed to generate challenge code');
                 }
@@ -168,7 +168,74 @@ export default {
             }
         },
         
-        // 开始轮询登录状态
+        // 建立WebSocket连接
+        startWebSocketLoginStatus() {
+            // 清除之前的轮询（如果有）
+            this.stopPollingLoginStatus();
+            
+            // 关闭之前的WebSocket连接（如果有）
+            this.closeWebSocket();
+            
+            // 创建WebSocket连接
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/login/ws?code=${this.challenge}`);
+            
+            // 监听WebSocket消息
+            this.ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.success) {
+                        if (data.status === 'success') {
+                            // 登录成功
+                            this.loginStatus = 'success';
+                            this.closeWebSocket();
+                            this.completeLogin(data.authToken, data.userId);
+                        } else if (data.status === 'expired') {
+                            // 挑战码过期
+                            this.loginStatus = 'expired';
+                            this.closeWebSocket();
+                        } else if (data.status === 'failed') {
+                            // 登录失败
+                            this.loginStatus = 'failed';
+                            this.closeWebSocket();
+                        }
+                        // 继续等待 pending 状态
+                    } else {
+                        // WebSocket返回错误，降级为轮询
+                        console.error('WebSocket error:', data);
+                        this.closeWebSocket();
+                        this.startPollingLoginStatus();
+                    }
+                } catch (error) {
+                    console.error('WebSocket message parse error:', error);
+                    this.closeWebSocket();
+                    this.startPollingLoginStatus();
+                }
+            };
+            
+            // 监听WebSocket错误
+            this.ws.onerror = (error) => {
+                console.error('WebSocket connection error:', error);
+                this.closeWebSocket();
+                // 降级为轮询
+                this.startPollingLoginStatus();
+            };
+            
+            // 监听WebSocket关闭
+            this.ws.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+        },
+        
+        // 关闭WebSocket连接
+        closeWebSocket() {
+            if (this.ws) {
+                this.ws.close();
+                this.ws = null;
+            }
+        },
+        
+        // 开始轮询登录状态（降级方案）
         startPollingLoginStatus() {
             // 清除之前的轮询
             this.stopPollingLoginStatus();
@@ -187,7 +254,7 @@ export default {
             }
         },
         
-        // 检查登录状态（轮询）
+        // 检查登录状态（轮询，降级方案）
         async checkLoginStatusPoll() {
             try {
                 const response = await fetch(`/api/login/status?code=${this.challenge}`, {
