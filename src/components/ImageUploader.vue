@@ -107,7 +107,7 @@ export default {
   data() {
     return {
       uploadApiUrl: 'https://img.58sb.cn/upload',
-      uploadToken: 'imgbed_VIPyy1zhsTuWAK2JaQ2eG8HQ84vYTou5',
+      uploadToken: 'imgbed_Bg2DcZlewNNWWXqal28W7ayIO7Q6aLe7',
       showModal: false,
       isUploading: false,
       uploadedImageUrl: '',
@@ -255,7 +255,7 @@ export default {
             const formData = new FormData();
             formData.append('file', blob, `cover-image.${format.ext}`);
             
-            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=img`;
+            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=cover`;
             
             fetch(uploadUrl, {
               method: 'POST',
@@ -295,7 +295,7 @@ export default {
             const formData = new FormData();
             formData.append('file', blob, `cover-image.${format.ext}`);
             
-            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=img`;
+            const uploadUrl = `${this.uploadApiUrl}?authCode=${this.uploadToken}&returnFormat=full&uploadFolder=cover`;
             
             fetch(uploadUrl, {
               method: 'POST',
