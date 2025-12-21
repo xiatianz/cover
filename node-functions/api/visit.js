@@ -4,7 +4,7 @@
 // 处理网站访问量统计
 
 // 处理POST请求 - 更新访问量
-export default async function onRequest({ request, params }) {
+export default async function onRequest({ request, params, env }) {
   // 处理OPTIONS请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -20,13 +20,13 @@ export default async function onRequest({ request, params }) {
   }
   
   // 读取Key-Value数据
-  const visitCount = await COVER_WAVE_KV.get('visitCount');
+  const visitCount = await env.COVER_WAVE_KV.get('visitCount');
   
   let visitCountInt = Number(visitCount) || 0;
   visitCountInt += 1;
 
   // 写入Key-Value数据
-  await COVER_WAVE_KV.put('visitCount', String(visitCountInt));
+  await env.COVER_WAVE_KV.put('visitCount', String(visitCountInt));
 
   const res = JSON.stringify({
     success: true,
@@ -42,7 +42,7 @@ export default async function onRequest({ request, params }) {
 }
 
 // 处理GET请求 - 获取访问量
-export async function onRequestGet({ request, params }) {
+export async function onRequestGet({ request, params, env }) {
   // 处理OPTIONS请求
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -58,7 +58,7 @@ export async function onRequestGet({ request, params }) {
   }
   
   // 读取Key-Value数据
-  const visitCount = await COVER_WAVE_KV.get('visitCount');
+  const visitCount = await env.COVER_WAVE_KV.get('visitCount');
   
   let visitCountInt = Number(visitCount) || 0;
 
