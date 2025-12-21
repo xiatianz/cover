@@ -47,18 +47,29 @@ export default async function onRequestPost({ request, params, env }) {
     url.searchParams.append('returnFormat', 'full');
     url.searchParams.append('uploadFolder', 'cover');
     url.searchParams.append('uploadNameType', 'short');
-    url.searchParams.append('serverCompress', 'true');
+    // 移除服务器压缩参数，不使用服务器压缩
+    // url.searchParams.append('serverCompress', 'true');
 
     console.log('Sending request to:', url.toString());
     
-    // 转发请求到图床API
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': uploadToken
-      },
-      body: newFormData
+    // 设置请求超时时间（30秒）
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Image bed API request timed out after 30 seconds'));
+      }, 30000);
     });
+
+    // 转发请求到图床API，带有超时控制
+    const response = await Promise.race([
+      fetch(url, { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${uploadToken}` // 尝试使用Bearer前缀
+        },
+        body: newFormData
+      }),
+      timeoutPromise
+    ]);
 
     // 获取响应内容
     const text = await response.text();
