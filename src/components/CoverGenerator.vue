@@ -426,11 +426,17 @@ export default {
   },
   methods: {
     loadStyles() {
+      // 确保样式链接只加载一次
+      const existingStyles = document.querySelectorAll('link[rel="stylesheet"]');
+      const existingUrls = Array.from(existingStyles).map(link => link.href);
+      
       defaultConfig.fontStyles.forEach(url => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = url;
-        document.head.appendChild(link);
+        if (!existingUrls.includes(url)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = url;
+          document.head.appendChild(link);
+        }
       });
     },
     updatePreview,
@@ -490,7 +496,10 @@ export default {
       state.selectedFont = fontValue;
       state.isFontMenuOpen = false;
       // 直接调用drawText和drawWatermark函数，确保字体立即更新
-      this.updatePreview('font', { target: { value: fontValue } });
+      import('../assets/script.js').then(({ drawText, drawWatermark }) => {
+        drawText();
+        drawWatermark();
+      });
     },
     handleClickOutside(event) {
       const dropdown = document.querySelector('.relative');
