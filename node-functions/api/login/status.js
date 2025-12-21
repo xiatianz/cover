@@ -34,30 +34,12 @@ export default async function onRequest(context) {
       });
     }
     
-    // 检查KV存储是否可用
-    if (!context.env || !context.env.COVER_WAVE_KV) {
-      console.error('KV storage not configured: context.env.COVER_WAVE_KV is undefined');
-      return new Response(JSON.stringify({
-        success: true,
-        status: 'pending', // 返回pending状态，避免显示过期
-        message: 'Challenge code pending (KV storage unavailable)',
-        kvError: 'KV storage not configured'
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      });
-    }
-    
     // 从KV获取挑战码状态
     let challengeDataStr;
     const key = `login_challenge_${code}`;
     try {
-      challengeDataStr = await context.env.COVER_WAVE_KV.get(key);
+      // 直接调用KV命名空间，不通过context.env
+      challengeDataStr = await COVER_WAVE_KV.get(key);
       console.log(`KV Get Result for ${key}:`, challengeDataStr);
     } catch (kvError) {
       console.error('KV storage error:', kvError);
@@ -100,7 +82,8 @@ export default async function onRequest(context) {
     // 检查挑战码是否过期
     if (Date.now() > challengeData.expiresAt) {
       try {
-        await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+        // 直接调用KV命名空间，不通过context.env
+        await COVER_WAVE_KV.delete(`login_challenge_${code}`);
       } catch (kvError) {
         console.error('KV storage error when deleting:', kvError);
       }
