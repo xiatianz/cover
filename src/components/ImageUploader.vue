@@ -106,8 +106,8 @@ export default {
   },
   data() {
     return {
-      uploadApiUrl: 'https://img.58sb.cn/upload',
-      uploadToken: 'imgbed_Bg2DcZlewNNWWXqal28W7ayIO7Q6aLe7',
+      uploadApiUrl: import.meta.env.VITE_APP_UPLOAD_API_URL,
+      uploadToken: import.meta.env.VITE_APP_UPLOAD_TOKEN,
       showModal: false,
       isUploading: false,
       uploadedImageUrl: '',
