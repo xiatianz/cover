@@ -2,11 +2,10 @@
 // 访问路径 https://www.58sb.cn/api/login/wechat/verify-code
 
 // 验证微信公众号登录验证码并生成登录会话
-
-export default async function onRequest(context) {
+export default async function onRequest({ request, params, env }) {
   try {
     // 只处理POST请求
-    if (context.request.method !== 'POST') {
+    if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: {
@@ -21,7 +20,7 @@ export default async function onRequest(context) {
     // 解析请求体
     let requestBody;
     try {
-      requestBody = await context.request.json();
+      requestBody = await request.json();
     } catch (parseError) {
       return new Response(JSON.stringify({ error: 'Invalid JSON format' }), {
         status: 400,
@@ -51,7 +50,7 @@ export default async function onRequest(context) {
     // 从KV获取验证码
     let codeDataStr;
     try {
-      codeDataStr = await context.env.COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
+      codeDataStr = await env.COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
     } catch (kvError) {
       console.error('KV storage error when getting wechat code:', kvError);
       return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {

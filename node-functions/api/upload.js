@@ -2,12 +2,12 @@
 // 访问路径 https://www.58sb.cn/api/upload
 
 // 处理文件上传请求，作为图床API的代理
-export default async function onRequestPost(context) {
+export default async function onRequestPost({ request, params, env }) {
   try {
     // 获取环境变量
-    const uploadApiUrl = context.env.VITE_APP_UPLOAD_API_URL;
-    const uploadToken = context.env.VITE_APP_UPLOAD_TOKEN;
-    const imageDomain = context.env.VITE_APP_IMAGE_DOMAIN;
+    const uploadApiUrl = env.VITE_APP_UPLOAD_API_URL;
+    const uploadToken = env.VITE_APP_UPLOAD_TOKEN;
+    const imageDomain = env.VITE_APP_IMAGE_DOMAIN;
 
     if (!uploadApiUrl || !uploadToken) {
       console.error('Missing configuration:', { uploadApiUrl, uploadToken });
@@ -23,7 +23,7 @@ export default async function onRequestPost(context) {
     }
 
     // 解析请求体
-    const formData = await context.request.formData();
+    const formData = await request.formData();
     const file = formData.get('file');
 
     if (!file) {

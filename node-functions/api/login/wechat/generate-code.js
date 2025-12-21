@@ -2,11 +2,10 @@
 // 访问路径 https://www.58sb.cn/api/login/wechat/generate-code
 
 // 生成微信公众号登录验证码并存储到KV
-
-export default async function onRequest(context) {
+export default async function onRequest({ request, params, env }) {
   try {
     // 只处理GET请求
-    if (context.request.method !== 'GET') {
+    if (request.method !== 'GET') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: {
@@ -29,7 +28,7 @@ export default async function onRequest(context) {
     
     // 存储验证码到KV
     try {
-      await context.env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
+      await env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
         code,
         expiresAt,
         used: false

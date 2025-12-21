@@ -2,14 +2,14 @@
 // 访问路径 https://www.58sb.cn/api/history
 
 // 管理用户历史记录
-export default async function onRequest(context) {
+export default async function onRequest({ request, params, env }) {
   // 处理OPTIONS请求
-  if (context.request.method === 'OPTIONS') {
+  if (request.method === 'OPTIONS') {
     return handleOptions();
   }
   
   // 验证认证令牌
-  const authToken = context.request.headers.get('Authorization')?.replace('Bearer ', '');
+  const authToken = request.headers.get('Authorization')?.replace('Bearer ', '');
   if (!authToken) {
     return new Response(JSON.stringify({ error: 'Unauthorized: Missing auth token' }), {
       status: 401,
@@ -18,7 +18,7 @@ export default async function onRequest(context) {
   }
   
   // 从KV获取认证信息
-  const authDataStr = await context.env.COVER_WAVE_KV.get(`auth_${authToken}`);
+  const authDataStr = await env.COVER_WAVE_KV.get(`auth_${authToken}`);
   if (!authDataStr) {
     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid auth token' }), {
       status: 401,
@@ -30,7 +30,7 @@ export default async function onRequest(context) {
   
   // 检查令牌是否过期
   if (Date.now() > authData.expiresAt) {
-    await context.env.COVER_WAVE_KV.delete(`auth_${authToken}`);
+    await env.COVER_WAVE_KV.delete(`auth_${authToken}`);
     return new Response(JSON.stringify({ error: 'Unauthorized: Auth token expired' }), {
       status: 401,
       headers: getCorsHeaders()
@@ -40,18 +40,18 @@ export default async function onRequest(context) {
   const userId = authData.userId;
   
   // 处理GET请求 - 获取历史记录
-  if (context.request.method === 'GET') {
-    return handleGetHistory(context, userId);
+  if (request.method === 'GET') {
+    return handleGetHistory({ request, env }, userId);
   }
   
   // 处理POST请求 - 添加历史记录
-  if (context.request.method === 'POST') {
-    return handleAddHistory(context, userId);
+  if (request.method === 'POST') {
+    return handleAddHistory({ request, env }, userId);
   }
   
   // 处理DELETE请求 - 清除历史记录
-  if (context.request.method === 'DELETE') {
-    return handleClearHistory(context, userId);
+  if (request.method === 'DELETE') {
+    return handleClearHistory({ request, env }, userId);
   }
   
   return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -61,10 +61,10 @@ export default async function onRequest(context) {
 }
 
 // 处理GET请求 - 获取历史记录
-async function handleGetHistory(context, userId) {
+async function handleGetHistory({ env }, userId) {
   try {
     // 获取用户数据
-    const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
     if (!userDataStr) {
       return new Response(JSON.stringify({
         success: true,
@@ -94,9 +94,9 @@ async function handleGetHistory(context, userId) {
 }
 
 // 处理POST请求 - 添加历史记录
-async function handleAddHistory(context, userId) {
+async function handleAddHistory({ request, env }, userId) {
   try {
-    const record = await context.request.json();
+    const record = await request.json();
     
     if (!record.url || !record.name) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -106,7 +106,7 @@ async function handleAddHistory(context, userId) {
     }
     
     // 获取用户数据
-    const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
     let userData = {
       userId,
       createdAt: Date.now(),
@@ -132,7 +132,7 @@ async function handleAddHistory(context, userId) {
     }
     
     // 更新用户数据
-    await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    await env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
     
     return new Response(JSON.stringify({
       success: true,
@@ -151,10 +151,10 @@ async function handleAddHistory(context, userId) {
 }
 
 // 处理DELETE请求 - 清除历史记录
-async function handleClearHistory(context, userId) {
+async function handleClearHistory({ env }, userId) {
   try {
     // 获取用户数据
-    const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
+    const userDataStr = await env.COVER_WAVE_KV.get(`user_${userId}`);
     if (!userDataStr) {
       return new Response(JSON.stringify({
         success: true,
@@ -171,7 +171,7 @@ async function handleClearHistory(context, userId) {
     userData.history = [];
     
     // 更新用户数据
-    await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    await env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
     
     return new Response(JSON.stringify({
       success: true,
