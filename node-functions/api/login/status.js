@@ -34,6 +34,25 @@ export default async function onRequest(context) {
       });
     }
     
+    // 检查KV存储是否可用
+    if (!context.env || !context.env.COVER_WAVE_KV) {
+      console.error('KV storage not configured: context.env.COVER_WAVE_KV is undefined');
+      return new Response(JSON.stringify({
+        success: true,
+        status: 'pending', // 返回pending状态，避免显示过期
+        message: 'Challenge code pending (KV storage unavailable)',
+        kvError: 'KV storage not configured'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
     // 从KV获取挑战码状态
     let challengeDataStr;
     const key = `login_challenge_${code}`;
@@ -45,7 +64,8 @@ export default async function onRequest(context) {
       return new Response(JSON.stringify({
         success: true,
         status: 'pending', // 改为pending，避免刚生成就显示过期
-        message: 'Challenge code pending'
+        message: 'Challenge code pending (KV storage error)',
+        kvError: kvError.message
       }), {
         status: 200,
         headers: {
@@ -62,7 +82,8 @@ export default async function onRequest(context) {
       return new Response(JSON.stringify({
         success: true,
         status: 'pending', // 改为pending，避免刚生成就显示过期
-        message: 'Challenge code pending'
+        message: 'Challenge code pending (not found in KV)',
+        kvError: 'Challenge code not found in KV'
       }), {
         status: 200,
         headers: {
