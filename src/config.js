@@ -10,3 +10,10 @@ export const supabaseConfig = {
 export const wechatConfig = {
   token: 'dadqfqefeqwcwcwe43534vwdvwv' // 微信公众号后台配置的Token
 };
+
+// 默认配置（兼容旧代码）
+export const defaultConfig = {
+  watermark: 'Canvas-Ruom',
+  text: 'Canvas-Ruom',
+  fontFamily: 'Arial'
+};
