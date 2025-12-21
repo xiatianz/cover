@@ -256,13 +256,10 @@ export default {
             const formData = new FormData();
             formData.append('file', blob, `cover-image.${format.ext}`);
             
-            const uploadUrl = `${this.uploadApiUrl}?returnFormat=full&uploadFolder=cover&uploadNameType=short&serverCompress=true`;
+            const uploadUrl = '/api/upload';
             
             fetch(uploadUrl, {
               method: 'POST',
-              headers: {
-                'Authorization': this.uploadToken
-              },
               body: formData
             })
             .then(response => {
