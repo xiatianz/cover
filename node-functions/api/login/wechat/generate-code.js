@@ -1,7 +1,10 @@
 // 文件路径 ./node-functions/api/login/wechat/generate-code.js
 // 访问路径 https://www.58sb.cn/api/login/wechat/generate-code
 
-// 生成微信公众号登录验证码并存储到KV
+// 导入Supabase客户端
+import { wechatCode } from '../../../utils/supabase.js';
+
+// 生成微信公众号登录验证码并存储到Supabase
 export default async function onRequest({ request, params, env }) {
   try {
     // 只处理GET请求
@@ -26,15 +29,14 @@ export default async function onRequest({ request, params, env }) {
     // 验证码有效期5分钟
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
-    // 存储验证码到KV
+    // 存储验证码到Supabase
     try {
-      await COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
-        code,
-        expiresAt,
-        used: false
-      }));
-    } catch (kvError) {
-      console.error('KV storage error when storing wechat code:', kvError);
+      const { error } = await wechatCode.create(sessionId, code, expiresAt);
+      if (error) {
+        throw error;
+      }
+    } catch (supabaseError) {
+      console.error('Supabase error when storing wechat code:', supabaseError);
       return new Response(JSON.stringify({ error: 'Failed to store verification code' }), {
         status: 500,
         headers: {

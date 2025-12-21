@@ -3,7 +3,9 @@
 
 // 验证微信公众号发送的验证码，完成登录流程
 
-// 使用官方推荐的函数参数格式，通过env访问KV
+// 导入Supabase客户端
+import { loginChallenge, authSession, user } from '../../utils/supabase.js';
+
 export default async function onRequest({ request, params, env }) {
   try {
     // 只处理POST请求
@@ -49,12 +51,10 @@ export default async function onRequest({ request, params, env }) {
       });
     }
     
-    // 从KV获取挑战码
-    let challengeDataStr;
-    try {
-      challengeDataStr = await COVER_WAVE_KV.get(`login_challenge_${code}`);
-    } catch (kvError) {
-      console.error('KV storage error when getting challenge:', kvError);
+    // 从Supabase获取挑战码
+    const { data: challengeData, error: challengeError } = await loginChallenge.get(code);
+    if (challengeError || !challengeData) {
+      console.error('Supabase error when getting challenge:', challengeError);
       return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
         status: 401,
         headers: {
@@ -65,28 +65,14 @@ export default async function onRequest({ request, params, env }) {
         }
       });
     }
-    
-    if (!challengeDataStr) {
-      return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      });
-    }
-    
-    const challengeData = JSON.parse(challengeDataStr);
     
     // 检查挑战码是否过期
-    if (Date.now() > challengeData.expiresAt) {
+    if (Date.now() > new Date(challengeData.expires_at).getTime()) {
       // 删除过期挑战码
       try {
-        await COVER_WAVE_KV.delete(`login_challenge_${code}`);
-      } catch (kvError) {
-        console.error('KV storage error when deleting expired challenge:', kvError);
+        await loginChallenge.delete(code);
+      } catch (supabaseError) {
+        console.error('Supabase error when deleting expired challenge:', supabaseError);
       }
       return new Response(JSON.stringify({ error: 'Challenge code expired' }), {
         status: 401,
@@ -120,13 +106,9 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
-        userId: openid, // 使用openid作为用户ID
-        expiresAt: authExpiresAt,
-        loginMethod: 'wechat_mp'
-      }));
-    } catch (kvError) {
-      console.error('KV storage error when storing auth token:', kvError);
+      await authSession.create(authToken, openid, authExpiresAt, 'wechat_mp');
+    } catch (supabaseError) {
+      console.error('Supabase error when storing auth token:', supabaseError);
       return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
         status: 500,
         headers: {
@@ -140,37 +122,30 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const userDataStr = await COVER_WAVE_KV.get(`user_${openid}`);
-      if (!userDataStr) {
-        await COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
-          userId: openid,
-          createdAt: Date.now(),
-          lastLoginAt: Date.now(),
-          history: []
-        }));
+      const { data: existingUser, error: getUserError } = await user.get(openid);
+      if (getUserError || !existingUser) {
+        // 创建新用户
+        await user.create(openid);
       } else {
         // 更新最后登录时间
-        const userData = JSON.parse(userDataStr);
-        await COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
-          ...userData,
-          lastLoginAt: Date.now()
-        }));
+        await user.update(openid, {
+          last_login_at: new Date()
+        });
       }
-    } catch (kvError) {
-      console.error('KV storage error when updating user data:', kvError);
+    } catch (supabaseError) {
+      console.error('Supabase error when updating user data:', supabaseError);
       // 继续执行，不影响登录流程
     }
     
     // 更新挑战码状态为成功
     try {
-      await COVER_WAVE_KV.put(`login_challenge_${code}`, JSON.stringify({
-        ...challengeData,
+      await loginChallenge.update(code, {
         status: 'success',
         openid: openid,
-        authToken: authToken
-      }));
-    } catch (kvError) {
-      console.error('KV storage error when updating challenge status:', kvError);
+        auth_token: authToken
+      });
+    } catch (supabaseError) {
+      console.error('Supabase error when updating challenge status:', supabaseError);
       // 继续执行，不影响登录流程
     }
     

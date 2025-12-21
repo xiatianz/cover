@@ -3,6 +3,9 @@
 
 // 处理登录状态的WebSocket连接，替代轮询
 
+// 导入Supabase客户端
+import { loginChallenge } from '../../utils/supabase.js';
+
 export default async function onRequest({ request, params, env }) {
   // 检查是否为WebSocket升级请求
   if (request.headers.get('upgrade') !== 'websocket') {
@@ -29,39 +32,26 @@ export default async function onRequest({ request, params, env }) {
     // 定期检查登录状态
     checkInterval = setInterval(async () => {
       try {
-        // 从KV获取挑战码状态
-        let challengeDataStr;
-        try {
-          // 通过env访问KV，符合官方推荐方式
-          if (typeof COVER_WAVE_KV !== 'undefined') {
-            challengeDataStr = await COVER_WAVE_KV.get(`login_challenge_${code}`);
-          }
-        } catch (error) {
-          console.error('KV get error:', error);
-        }
+        // 从Supabase获取挑战码状态
+        const { data: challengeData, error: getError } = await loginChallenge.get(code);
         
-        if (!challengeDataStr) {
+        if (getError || !challengeData) {
           // 挑战码不存在，可能已过期
           socket.send(JSON.stringify({
             status: 'pending',
-            message: 'Challenge code pending (not found in KV)',
-            kvError: 'Challenge code not found in KV'
+            message: 'Challenge code pending (not found in Supabase)',
+            supabaseError: getError ? getError.message : 'Challenge code not found in Supabase'
           }));
           return;
         }
         
-        const challengeData = JSON.parse(challengeDataStr);
-        
         // 检查挑战码是否过期
-        if (Date.now() > challengeData.expiresAt) {
+        if (Date.now() > new Date(challengeData.expires_at).getTime()) {
           // 删除过期挑战码
           try {
-            // 通过env访问KV，符合官方推荐方式
-            if (typeof COVER_WAVE_KV !== 'undefined') {
-              await COVER_WAVE_KV.delete(`login_challenge_${code}`);
-            }
-          } catch (error) {
-            console.error('KV delete error:', error);
+            await loginChallenge.delete(code);
+          } catch (deleteError) {
+            console.error('Supabase delete error:', deleteError);
           }
           socket.send(JSON.stringify({
             status: 'expired',
@@ -77,7 +67,7 @@ export default async function onRequest({ request, params, env }) {
         socket.send(JSON.stringify({
           success: true,
           status: challengeData.status,
-          authToken: challengeData.authToken || null,
+          authToken: challengeData.auth_token || null,
           userId: challengeData.openid || null,
           message: challengeData.status === 'pending' ? 'Waiting for verification' : 'Login completed'
         }));
@@ -93,8 +83,8 @@ export default async function onRequest({ request, params, env }) {
         console.error('Error checking login status:', error);
         socket.send(JSON.stringify({
           status: 'pending',
-          message: 'Challenge code pending (KV storage error)',
-          kvError: error.message
+          message: 'Challenge code pending (Supabase error)',
+          supabaseError: error.message
         }));
       }
     }, 1000); // 每秒检查一次

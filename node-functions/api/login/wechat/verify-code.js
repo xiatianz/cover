@@ -1,6 +1,9 @@
 // 文件路径 ./node-functions/api/login/wechat/verify-code.js
 // 访问路径 https://www.58sb.cn/api/login/wechat/verify-code
 
+// 导入Supabase客户端
+import { wechatCode, authSession, user } from '../../../utils/supabase.js';
+
 // 验证微信公众号登录验证码并生成登录会话
 export default async function onRequest({ request, params, env }) {
   try {
@@ -47,12 +50,10 @@ export default async function onRequest({ request, params, env }) {
       });
     }
     
-    // 从KV获取验证码
-    let codeDataStr;
-    try {
-      codeDataStr = await COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
-    } catch (kvError) {
-      console.error('KV storage error when getting wechat code:', kvError);
+    // 从Supabase获取验证码
+    const { data: codeData, error: getCodeError } = await wechatCode.get(sessionId);
+    if (getCodeError || !codeData) {
+      console.error('Supabase error when getting wechat code:', getCodeError);
       return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
         status: 401,
         headers: {
@@ -63,28 +64,14 @@ export default async function onRequest({ request, params, env }) {
         }
       });
     }
-    
-    if (!codeDataStr) {
-      return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      });
-    }
-    
-    const codeData = JSON.parse(codeDataStr);
     
     // 检查验证码是否过期
-    if (Date.now() > codeData.expiresAt) {
+    if (Date.now() > new Date(codeData.expires_at).getTime()) {
       // 删除过期验证码
       try {
-        await COVER_WAVE_KV.delete(`wechat_code_${sessionId}`);
-      } catch (kvError) {
-        console.error('KV storage error when deleting expired code:', kvError);
+        await wechatCode.delete(sessionId);
+      } catch (supabaseError) {
+        console.error('Supabase error when deleting expired code:', supabaseError);
       }
       return new Response(JSON.stringify({ error: 'Verification code expired' }), {
         status: 401,
@@ -125,12 +112,11 @@ export default async function onRequest({ request, params, env }) {
     
     // 标记验证码为已使用
     try {
-      await COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
-        ...codeData,
+      await wechatCode.update(sessionId, {
         used: true
-      }));
-    } catch (kvError) {
-      console.error('KV storage error when updating code status:', kvError);
+      });
+    } catch (supabaseError) {
+      console.error('Supabase error when updating code status:', supabaseError);
       // 继续执行，不影响登录流程
     }
     
@@ -145,13 +131,9 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
-        userId,
-        expiresAt: authExpiresAt,
-        loginMethod: 'wechat'
-      }));
-    } catch (kvError) {
-      console.error('KV storage error when storing auth token:', kvError);
+      await authSession.create(authToken, userId, authExpiresAt, 'wechat');
+    } catch (supabaseError) {
+      console.error('Supabase error when storing auth token:', supabaseError);
       return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
         status: 500,
         headers: {
@@ -165,24 +147,18 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
-      if (!userDataStr) {
-        await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
-          userId,
-          createdAt: Date.now(),
-          lastLoginAt: Date.now(),
-          history: []
-        }));
+      const { data: existingUser, error: getUserError } = await user.get(userId);
+      if (getUserError || !existingUser) {
+        // 创建新用户
+        await user.create(userId);
       } else {
         // 更新最后登录时间
-        const userData = JSON.parse(userDataStr);
-        await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
-          ...userData,
-          lastLoginAt: Date.now()
-        }));
+        await user.update(userId, {
+          last_login_at: new Date()
+        });
       }
-    } catch (kvError) {
-      console.error('KV storage error when updating user data:', kvError);
+    } catch (supabaseError) {
+      console.error('Supabase error when updating user data:', supabaseError);
       // 继续执行，不影响登录流程
     }
     

@@ -13,13 +13,23 @@
             </a>
         </div>
         
-        <!-- 右侧：微信登录按钮 -->
+        <!-- 右侧：登录按钮 -->
         <div class="flex items-center gap-3 ml-6">
+            <!-- 邮件登录按钮 -->
             <button v-if="!isLoggedIn" 
-                    @click="openLogin"
+                    @click="openEmailLogin"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                邮件登录
+            </button>
+            
+            <!-- 微信登录按钮 -->
+            <button v-if="!isLoggedIn" 
+                    @click="openWechatLogin"
                     class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
                 微信登录
             </button>
+            
+            <!-- 退出登录按钮 -->
             <button v-else 
                     @click="logout"
                     class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
@@ -36,7 +46,7 @@
             <!-- 弹窗头部 -->
             <div class="flex items-center justify-between p-4 border-b">
                 <h3 class="text-lg font-semibold">微信公众号登录</h3>
-                <button @click="cancelLogin" class="text-gray-400 hover:text-gray-600">
+                <button @click="cancelWechatLogin" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -105,45 +115,204 @@
             </div>
         </div>
     </div>
+    
+    <!-- 邮件登录弹窗 -->
+    <div v-if="showEmailLogin" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" 
+         @click.self="showEmailLogin = false">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-[400px]">
+            <!-- 弹窗头部 -->
+            <div class="flex items-center justify-between p-4 border-b">
+                <h3 class="text-lg font-semibold">邮件登录</h3>
+                <button @click="cancelEmailLogin" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- 弹窗内容 -->
+            <div class="p-6 space-y-6">
+                <form @submit.prevent="handleEmailLogin" class="space-y-4">
+                    <!-- 邮件输入 -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            v-model="email" 
+                            required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="请输入您的邮箱地址"
+                        >
+                    </div>
+                    
+                    <!-- 登录方式切换 -->
+                    <div class="flex items-center gap-2 text-sm">
+                        <input type="radio" id="login" v-model="emailLoginMode" value="login" class="h-4 w-4 text-blue-600">
+                        <label for="login" class="text-gray-700">登录</label>
+                        <input type="radio" id="signup" v-model="emailLoginMode" value="signup" class="h-4 w-4 text-blue-600 ml-4">
+                        <label for="signup" class="text-gray-700">注册</label>
+                    </div>
+                    
+                    <!-- 提交按钮 -->
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                        :disabled="isSubmitting"
+                    >
+                        <span v-if="!isSubmitting">
+                            {{ emailLoginMode === 'login' ? '登录' : '注册' }}
+                        </span>
+                        <span v-else>
+                            <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                            处理中...
+                        </span>
+                    </button>
+                    
+                    <!-- 提示信息 -->
+                    <div v-if="emailMessage" :class="emailMessageType === 'success' ? 'text-green-600' : 'text-red-600'" class="text-sm text-center">
+                        {{ emailMessage }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
+import { supabase } from '../supabase';
+
 export default {
     data() {
         return {
             title: import.meta.env.VITE_APP_TITLE,
+            // 微信登录状态
             showWechatLogin: false,
             challenge: '',
             loginStatus: 'pending', // pending, success, failed, expired
+            pollingInterval: null,
+            // 邮件登录状态
+            showEmailLogin: false,
+            email: '',
+            emailLoginMode: 'login', // login or signup
+            isSubmitting: false,
+            emailMessage: '',
+            emailMessageType: 'success', // success or error
+            // 用户状态
             isLoggedIn: false,
-            authToken: '',
-            userId: '',
-            pollingInterval: null
+            userId: ''
         };
     },
     
     mounted() {
         // 检查本地存储中的登录状态
         this.checkLoginStatus();
+        
+        // 监听全局登录事件
+        window.addEventListener('userLoggedIn', () => {
+            this.isLoggedIn = true;
+        });
+        
+        // 监听全局登出事件
+        window.addEventListener('userLoggedOut', () => {
+            this.isLoggedIn = false;
+        });
     },
     
     methods: {
-        checkLoginStatus() {
-            const authToken = localStorage.getItem('coverWaveAuthToken');
-            const userId = localStorage.getItem('coverWaveUserId');
-            if (authToken && userId) {
-                this.isLoggedIn = true;
-                this.authToken = authToken;
-                this.userId = userId;
+        // 检查登录状态
+        async checkLoginStatus() {
+            try {
+                // 使用Supabase检查登录状态
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    this.isLoggedIn = true;
+                    this.userId = session.user.id;
+                } else {
+                    this.isLoggedIn = false;
+                    this.userId = '';
+                }
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                this.isLoggedIn = false;
+                this.userId = '';
             }
         },
         
-        // 打开登录弹窗，开始登录流程
-        openLogin() {
+        // 打开微信登录弹窗
+        openWechatLogin() {
             this.showWechatLogin = true;
             this.loginStatus = 'pending';
             this.challenge = '';
             this.requestChallenge();
+        },
+        
+        // 打开邮件登录弹窗
+        openEmailLogin() {
+            this.showEmailLogin = true;
+            this.email = '';
+            this.emailLoginMode = 'login';
+            this.emailMessage = '';
+        },
+        
+        // 取消微信登录
+        cancelWechatLogin() {
+            this.stopPollingLoginStatus();
+            this.closeWebSocket();
+            this.showWechatLogin = false;
+            this.challenge = '';
+            this.loginStatus = 'pending';
+        },
+        
+        // 取消邮件登录
+        cancelEmailLogin() {
+            this.showEmailLogin = false;
+            this.email = '';
+            this.emailMessage = '';
+        },
+        
+        // 处理邮件登录/注册
+        async handleEmailLogin() {
+            this.isSubmitting = true;
+            this.emailMessage = '';
+            
+            try {
+                let result;
+                
+                if (this.emailLoginMode === 'login') {
+                    // 登录
+                    result = await supabase.auth.signInWithOtp({
+                        email: this.email,
+                        options: {
+                            emailRedirectTo: window.location.origin
+                        }
+                    });
+                } else {
+                    // 注册
+                    result = await supabase.auth.signUp({
+                        email: this.email,
+                        options: {
+                            emailRedirectTo: window.location.origin
+                        }
+                    });
+                }
+                
+                if (result.error) {
+                    throw result.error;
+                }
+                
+                // 显示成功消息
+                this.emailMessageType = 'success';
+                this.emailMessage = `登录链接已发送到 ${this.email}，请查收邮件完成登录。`;
+                
+            } catch (error) {
+                console.error('邮件登录/注册失败:', error);
+                this.emailMessageType = 'error';
+                this.emailMessage = `操作失败: ${error.message}`;
+            } finally {
+                this.isSubmitting = false;
+            }
         },
         
         // 请求登录挑战码
@@ -164,7 +333,7 @@ export default {
             } catch (error) {
                 console.error('生成挑战码失败:', error);
                 alert('生成挑战码失败，请重试');
-                this.cancelLogin();
+                this.cancelWechatLogin();
             }
         },
         
@@ -284,49 +453,52 @@ export default {
             }
         },
         
-        // 完成登录
+        // 完成微信登录
         completeLogin(authToken, userId) {
-            // 保存登录状态
-            localStorage.setItem('coverWaveAuthToken', authToken);
-            localStorage.setItem('coverWaveUserId', userId);
-            
-            this.isLoggedIn = true;
-            this.authToken = authToken;
-            this.userId = userId;
-            this.showWechatLogin = false;
-            
-            // 触发全局登录事件
-            window.dispatchEvent(new Event('userLoggedIn'));
-            
-            // 延迟关闭弹窗，显示登录成功信息
-            setTimeout(() => {
-                this.showWechatLogin = false;
-            }, 1500);
+            try {
+                // 保存登录状态到本地
+                localStorage.setItem('coverWaveAuthToken', authToken);
+                localStorage.setItem('coverWaveUserId', userId);
+                
+                // 更新本地状态
+                this.isLoggedIn = true;
+                this.userId = userId;
+                
+                // 触发全局登录事件
+                window.dispatchEvent(new Event('userLoggedIn'));
+                
+                // 延迟关闭弹窗，显示登录成功信息
+                setTimeout(() => {
+                    this.showWechatLogin = false;
+                }, 1500);
+            } catch (error) {
+                console.error('完成登录失败:', error);
+            }
         },
         
-        // 取消登录
-        cancelLogin() {
-            this.stopPollingLoginStatus();
-            this.showWechatLogin = false;
-            this.challenge = '';
-            this.loginStatus = 'pending';
-        },
-        
-        logout() {
-            // 清除本地存储
-            localStorage.removeItem('coverWaveAuthToken');
-            localStorage.removeItem('coverWaveUserId');
-            
-            // 重置状态
-            this.isLoggedIn = false;
-            this.authToken = '';
-            this.userId = '';
-            
-            // 触发全局登出事件
-            window.dispatchEvent(new Event('userLoggedOut'));
-            
-            // 关闭登录弹窗（如果打开）
-            this.cancelLogin();
+        // 退出登录
+        async logout() {
+            try {
+                // 使用Supabase登出
+                await supabase.auth.signOut();
+                
+                // 清除本地存储
+                localStorage.removeItem('coverWaveAuthToken');
+                localStorage.removeItem('coverWaveUserId');
+                
+                // 重置状态
+                this.isLoggedIn = false;
+                this.userId = '';
+                
+                // 触发全局登出事件
+                window.dispatchEvent(new Event('userLoggedOut'));
+                
+                // 关闭登录弹窗（如果打开）
+                this.cancelWechatLogin();
+                this.cancelEmailLogin();
+            } catch (error) {
+                console.error('退出登录失败:', error);
+            }
         }
     }
 };

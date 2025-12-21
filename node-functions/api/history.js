@@ -1,6 +1,9 @@
 // 文件路径 ./node-functions/api/history.js
 // 访问路径 https://www.58sb.cn/api/history
 
+// 导入Supabase客户端
+import { authSession, user } from '../utils/supabase.js';
+
 // 管理用户历史记录
 export default async function onRequest({ request, params, env }) {
   // 处理OPTIONS请求
@@ -17,27 +20,25 @@ export default async function onRequest({ request, params, env }) {
     });
   }
   
-  // 从KV获取认证信息
-  const authDataStr = await COVER_WAVE_KV.get(`auth_${authToken}`);
-  if (!authDataStr) {
+  // 从Supabase获取认证信息
+  const { data: authData, error: authError } = await authSession.get(authToken);
+  if (authError || !authData) {
     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid auth token' }), {
       status: 401,
       headers: getCorsHeaders()
     });
   }
   
-  const authData = JSON.parse(authDataStr);
-  
   // 检查令牌是否过期
-  if (Date.now() > authData.expiresAt) {
-    await COVER_WAVE_KV.delete(`auth_${authToken}`);
+  if (Date.now() > new Date(authData.expires_at).getTime()) {
+    // 在实际应用中，可能需要添加删除过期会话的逻辑
     return new Response(JSON.stringify({ error: 'Unauthorized: Auth token expired' }), {
       status: 401,
       headers: getCorsHeaders()
     });
   }
   
-  const userId = authData.userId;
+  const userId = authData.user_id;
   
   // 处理GET请求 - 获取历史记录
   if (request.method === 'GET') {
@@ -64,8 +65,8 @@ export default async function onRequest({ request, params, env }) {
 async function handleGetHistory(userId) {
   try {
     // 获取用户数据
-    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
-    if (!userDataStr) {
+    const { data: userData, error: userError } = await user.get(userId);
+    if (userError || !userData) {
       return new Response(JSON.stringify({
         success: true,
         history: []
@@ -74,8 +75,6 @@ async function handleGetHistory(userId) {
         headers: getCorsHeaders()
       });
     }
-    
-    const userData = JSON.parse(userDataStr);
     
     return new Response(JSON.stringify({
       success: true,
@@ -106,16 +105,16 @@ async function handleAddHistory(request, userId) {
     }
     
     // 获取用户数据
-    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
-    let userData = {
+    const { data: userData, error: userError } = await user.get(userId);
+    let updatedUserData = {
       userId,
-      createdAt: Date.now(),
-      lastLoginAt: Date.now(),
+      createdAt: new Date(),
+      lastLoginAt: new Date(),
       history: []
     };
     
-    if (userDataStr) {
-      userData = JSON.parse(userDataStr);
+    if (userData) {
+      updatedUserData = userData;
     }
     
     // 添加新记录到历史记录开头
@@ -124,19 +123,26 @@ async function handleAddHistory(request, userId) {
       timestamp: record.timestamp || new Date().toLocaleString()
     };
     
-    userData.history.unshift(newRecord);
+    // 确保history是数组
+    if (!Array.isArray(updatedUserData.history)) {
+      updatedUserData.history = [];
+    }
+    
+    updatedUserData.history.unshift(newRecord);
     
     // 限制历史记录数量为50条
-    if (userData.history.length > 50) {
-      userData.history = userData.history.slice(0, 50);
+    if (updatedUserData.history.length > 50) {
+      updatedUserData.history = updatedUserData.history.slice(0, 50);
     }
     
     // 更新用户数据
-    await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    await user.update(userId, {
+      history: updatedUserData.history
+    });
     
     return new Response(JSON.stringify({
       success: true,
-      history: userData.history
+      history: updatedUserData.history
     }), {
       status: 200,
       headers: getCorsHeaders()
@@ -153,25 +159,10 @@ async function handleAddHistory(request, userId) {
 // 处理DELETE请求 - 清除历史记录
 async function handleClearHistory(userId) {
   try {
-    // 获取用户数据
-    const userDataStr = await COVER_WAVE_KV.get(`user_${userId}`);
-    if (!userDataStr) {
-      return new Response(JSON.stringify({
-        success: true,
-        history: []
-      }), {
-        status: 200,
-        headers: getCorsHeaders()
-      });
-    }
-    
-    const userData = JSON.parse(userDataStr);
-    
-    // 清空历史记录
-    userData.history = [];
-    
-    // 更新用户数据
-    await COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify(userData));
+    // 更新用户数据，清空历史记录
+    await user.update(userId, {
+      history: []
+    });
     
     return new Response(JSON.stringify({
       success: true,

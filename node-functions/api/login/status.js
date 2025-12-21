@@ -3,7 +3,9 @@
 
 // 查询登录状态，用于前端轮询
 
-// 使用官方推荐的函数参数格式，通过env访问KV
+// 导入Supabase客户端
+import { loginChallenge } from '../../utils/supabase.js';
+
 export default async function onRequest({ request, params, env }) {
   try {
     // 只处理GET请求
@@ -35,39 +37,35 @@ export default async function onRequest({ request, params, env }) {
       });
     }
     
-    // 检查KV存储是否可用
-    if (typeof COVER_WAVE_KV === 'undefined') {
-      console.error('KV storage not configured: COVER_WAVE_KV is undefined');
-      return new Response(JSON.stringify({
-        success: true,
-        status: 'pending', // 返回pending状态，避免显示过期
-        message: 'Challenge code pending (KV storage unavailable)',
-        kvError: 'KV storage not configured'
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      });
-    }
-    
-    // 从KV获取挑战码状态
-    let challengeDataStr;
-    const key = `login_challenge_${code}`;
+    // 从Supabase获取挑战码状态
+    let challengeData;
     try {
-      // 直接使用全局变量访问KV，符合EdgeOne Functions规范
-      challengeDataStr = await COVER_WAVE_KV.get(key);
-      console.log(`KV Get Result for ${key}:`, challengeDataStr);
-    } catch (kvError) {
-      console.error('KV storage error:', kvError);
+      const { data, error } = await loginChallenge.get(code);
+      if (error) {
+        console.error('Supabase error:', error);
+        return new Response(JSON.stringify({
+          success: true,
+          status: 'pending', // 改为pending，避免刚生成就显示过期
+          message: 'Challenge code pending (Supabase error)',
+          supabaseError: error.message
+        }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        });
+      }
+      challengeData = data;
+    } catch (supabaseError) {
+      console.error('Supabase error:', supabaseError);
       return new Response(JSON.stringify({
         success: true,
         status: 'pending', // 改为pending，避免刚生成就显示过期
-        message: 'Challenge code pending (KV storage error)',
-        kvError: kvError.message
+        message: 'Challenge code pending (Supabase error)',
+        supabaseError: supabaseError.message
       }), {
         status: 200,
         headers: {
@@ -79,13 +77,13 @@ export default async function onRequest({ request, params, env }) {
       });
     }
     
-    if (!challengeDataStr) {
-      console.log(`Challenge code ${code} not found in KV`);
+    if (!challengeData) {
+      console.log(`Challenge code ${code} not found in Supabase`);
       return new Response(JSON.stringify({
         success: true,
         status: 'pending', // 改为pending，避免刚生成就显示过期
-        message: 'Challenge code pending (not found in KV)',
-        kvError: 'Challenge code not found in KV'
+        message: 'Challenge code pending (not found in Supabase)',
+        supabaseError: 'Challenge code not found in Supabase'
       }), {
         status: 200,
         headers: {
@@ -96,16 +94,13 @@ export default async function onRequest({ request, params, env }) {
         }
       });
     }
-    
-    const challengeData = JSON.parse(challengeDataStr);
     
     // 检查挑战码是否过期
-    if (Date.now() > challengeData.expiresAt) {
+    if (Date.now() > new Date(challengeData.expires_at).getTime()) {
       try {
-        // 直接使用全局变量访问KV，符合EdgeOne Functions规范
-        await COVER_WAVE_KV.delete(`login_challenge_${code}`);
-      } catch (kvError) {
-        console.error('KV storage error when deleting:', kvError);
+        await loginChallenge.delete(code);
+      } catch (supabaseError) {
+        console.error('Supabase error when deleting:', supabaseError);
       }
       return new Response(JSON.stringify({
         success: true,
@@ -125,7 +120,7 @@ export default async function onRequest({ request, params, env }) {
     return new Response(JSON.stringify({
       success: true,
       status: challengeData.status,
-      authToken: challengeData.authToken || null,
+      authToken: challengeData.auth_token || null,
       userId: challengeData.openid || null,
       message: challengeData.status === 'pending' ? 'Waiting for verification' : 'Login completed'
     }), {
