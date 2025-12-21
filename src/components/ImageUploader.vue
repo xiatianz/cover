@@ -107,6 +107,7 @@ export default {
   data() {
     return {
       uploadApiUrl: import.meta.env.VITE_APP_UPLOAD_API_URL,
+      imageDomain: import.meta.env.VITE_APP_IMAGE_DOMAIN || 'https://img.58sb.cn',
       uploadToken: import.meta.env.VITE_APP_UPLOAD_TOKEN,
       showModal: false,
       isUploading: false,
@@ -266,7 +267,7 @@ export default {
               if (data && data.length > 0 && data[0].src) {
                 const imageUrl = data[0].src.startsWith('http') 
                   ? data[0].src 
-                  : `https://img.58sb.cn${data[0].src}`;
+                  : `${this.imageDomain}${data[0].src}`;
                 resolve({
                   success: true,
                   url: imageUrl,
@@ -306,7 +307,7 @@ export default {
               if (data && data.length > 0 && data[0].src) {
                 const imageUrl = data[0].src.startsWith('http') 
                   ? data[0].src 
-                  : `https://img.58sb.cn${data[0].src}`;
+                  : `${this.imageDomain}${data[0].src}`;
                 resolve({
                   success: true,
                   url: imageUrl,
