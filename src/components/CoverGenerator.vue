@@ -489,6 +489,7 @@ export default {
     selectFont(fontValue) {
       state.selectedFont = fontValue;
       state.isFontMenuOpen = false;
+      // 直接调用drawText和drawWatermark函数，确保字体立即更新
       this.updatePreview('font', { target: { value: fontValue } });
     },
     handleClickOutside(event) {

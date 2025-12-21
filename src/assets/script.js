@@ -455,7 +455,25 @@ export function drawText() {
     textCtx.textRenderingOptimization = 'optimizeQuality';
     
     const { fontFamily } = getHtmlFontStyles();
-    const font = state.selectedFont ? `${state.selectedFont}, ${fontFamily}` : fontFamily;
+    
+    // 映射自定义字体名称到实际字体
+    let actualFont = state.selectedFont;
+    switch (actualFont) {
+        case 'MaoMaoTi':
+            actualFont = 'ZCOOL KuaiLe';
+            break;
+        case 'KeAiTi':
+            actualFont = 'Ma Shan Zheng';
+            break;
+        case 'ShouXieTi':
+            actualFont = 'ZCOOL QingKe HuangYou';
+            break;
+        case 'KaTongTi':
+            actualFont = 'ZCOOL XiaoWei';
+            break;
+    }
+    
+    const font = actualFont ? `${actualFont}, ${fontFamily}` : fontFamily;
     const scaledTextSize = state.textSize * state.canvasScale;
     textCtx.font = `600 ${scaledTextSize}px ${font}`;
     textCtx.fillStyle = state.textColor;
@@ -497,7 +515,25 @@ export function drawWatermark() {
     watermarkCtx.textRenderingOptimization = 'optimizeQuality';
     
     const { fontFamily } = getHtmlFontStyles();
-    const font = state.selectedFont ? `${state.selectedFont}, ${fontFamily}` : fontFamily;
+    
+    // 映射自定义字体名称到实际字体
+    let actualFont = state.selectedFont;
+    switch (actualFont) {
+        case 'MaoMaoTi':
+            actualFont = 'ZCOOL KuaiLe';
+            break;
+        case 'KeAiTi':
+            actualFont = 'Ma Shan Zheng';
+            break;
+        case 'ShouXieTi':
+            actualFont = 'ZCOOL QingKe HuangYou';
+            break;
+        case 'KaTongTi':
+            actualFont = 'ZCOOL XiaoWei';
+            break;
+    }
+    
+    const font = actualFont ? `${actualFont}, ${fontFamily}` : fontFamily;
     const scaledFontSize = 14 * state.canvasScale;
     const scaledPadding = 20 * state.canvasScale;
     watermarkCtx.font = `italic ${scaledFontSize}px ${font}`;
