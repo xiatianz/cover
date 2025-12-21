@@ -55,13 +55,87 @@ export default async function onRequest(context) {
         const arr = [token, timestamp, nonce].sort();
         const str = arr.join('');
         
-        // 在Edge Functions环境中，使用Web Crypto API
-        const encoder = new TextEncoder();
-        const data = encoder.encode(str);
-        const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const sha1Result = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
+        // 使用纯JavaScript实现的SHA-1算法，替代crypto.subtle.digest
+        function sha1(str) {
+          const rotateLeft = (n, s) => (n << s) | (n >>> (32 - s));
+          const ch = (x, y, z) => (x & y) ^ (~x & z);
+          const parity = (x, y, z) => x ^ y ^ z;
+          const maj = (x, y, z) => (x & y) ^ (x & z) ^ (y & z);
+          const f = (t, x, y, z) => {
+            if (t < 20) return ch(x, y, z);
+            if (t < 40) return parity(x, y, z);
+            if (t < 60) return maj(x, y, z);
+            return parity(x, y, z);
+          };
+          const K = (t) => {
+            if (t < 20) return 0x5a827999;
+            if (t < 40) return 0x6ed9eba1;
+            if (t < 60) return 0x8f1bbcdc;
+            return 0xca62c1d6;
+          };
+
+          let h0 = 0x67452301;
+          let h1 = 0xefcdab89;
+          let h2 = 0x98badcfe;
+          let h3 = 0x10325476;
+          let h4 = 0xc3d2e1f0;
+
+          const bytes = [];
+          for (let i = 0; i < str.length; i++) {
+            bytes.push(str.charCodeAt(i));
+          }
+          bytes.push(0x80);
+
+          while ((bytes.length * 8) % 512 !== 448) {
+            bytes.push(0x00);
+          }
+
+          const bitLength = str.length * 8;
+          for (let i = 0; i < 8; i++) {
+            bytes.push((bitLength >>> (56 - 8 * i)) & 0xff);
+          }
+
+          for (let i = 0; i < bytes.length; i += 64) {
+            const w = new Array(80);
+            for (let t = 0; t < 16; t++) {
+              w[t] = (bytes[i + t * 4] << 24) | (bytes[i + t * 4 + 1] << 16) | (bytes[i + t * 4 + 2] << 8) | bytes[i + t * 4 + 3];
+            }
+            for (let t = 16; t < 80; t++) {
+              w[t] = rotateLeft(w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16], 1);
+            }
+
+            let a = h0;
+            let b = h1;
+            let c = h2;
+            let d = h3;
+            let e = h4;
+
+            for (let t = 0; t < 80; t++) {
+              const temp = rotateLeft(a, 5) + f(t, b, c, d) + e + K(t) + w[t];
+              e = d;
+              d = c;
+              c = rotateLeft(b, 30);
+              b = a;
+              a = temp;
+            }
+
+            h0 = (h0 + a) & 0xffffffff;
+            h1 = (h1 + b) & 0xffffffff;
+            h2 = (h2 + c) & 0xffffffff;
+            h3 = (h3 + d) & 0xffffffff;
+            h4 = (h4 + e) & 0xffffffff;
+          }
+
+          const format = (n) => {
+            let s = n.toString(16);
+            while (s.length < 8) s = '0' + s;
+            return s;
+          };
+
+          return format(h0) + format(h1) + format(h2) + format(h3) + format(h4);
+        }
+
+        const sha1Result = sha1(str);
         return sha1Result === signature;
       };
       

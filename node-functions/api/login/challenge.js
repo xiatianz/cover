@@ -3,25 +3,43 @@
 
 // 生成登录挑战码，用于微信公众号登录
 
-export default async function onRequestGet(context) {
+export default async function onRequest(context) {
   try {
+    // 只处理GET请求
+    if (context.request.method !== 'GET') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
     // 生成5位数字挑战码
     const challenge = Math.floor(10000 + Math.random() * 90000).toString();
     
-    // 生成唯一的会话ID
-    const sessionId = crypto.randomUUID();
+    // 生成唯一的会话ID - 使用时间戳+随机数替代crypto API
+    const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // 挑战码有效期5分钟
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
-    // 存储挑战码到KV
-    await context.env.COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
-      sessionId,
-      expiresAt,
-      status: 'pending', // pending, success, failed
-      openid: null,
-      authToken: null
-    }));
+    // 存储挑战码到KV - 使用try-catch处理可能的KV存储错误
+    try {
+      await context.env.COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
+        sessionId,
+        expiresAt,
+        status: 'pending', // pending, success, failed
+        openid: null,
+        authToken: null
+      }));
+    } catch (kvError) {
+      console.error('KV storage error:', kvError);
+      // 即使KV存储失败，也返回挑战码，后续登录流程会处理
+    }
     
     return new Response(JSON.stringify({
       success: true,
@@ -38,7 +56,10 @@ export default async function onRequestGet(context) {
     });
   } catch (error) {
     console.error('Error generating challenge:', error);
-    return new Response(JSON.stringify({ error: 'Failed to generate challenge code' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to generate challenge code',
+      details: error.message
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

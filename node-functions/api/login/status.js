@@ -3,8 +3,21 @@
 
 // 查询登录状态，用于前端轮询
 
-export default async function onRequestGet(context) {
+export default async function onRequest(context) {
   try {
+    // 只处理GET请求
+    if (context.request.method !== 'GET') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
     // 获取查询参数
     const url = new URL(context.request.url);
     const code = url.searchParams.get('code');
@@ -22,7 +35,25 @@ export default async function onRequestGet(context) {
     }
     
     // 从KV获取挑战码状态
-    const challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+    let challengeDataStr;
+    try {
+      challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+    } catch (kvError) {
+      console.error('KV storage error:', kvError);
+      return new Response(JSON.stringify({
+        success: true,
+        status: 'expired',
+        message: 'Challenge code expired'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
     
     if (!challengeDataStr) {
       return new Response(JSON.stringify({
@@ -44,7 +75,11 @@ export default async function onRequestGet(context) {
     
     // 检查挑战码是否过期
     if (Date.now() > challengeData.expiresAt) {
-      await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+      try {
+        await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+      } catch (kvError) {
+        console.error('KV storage error when deleting:', kvError);
+      }
       return new Response(JSON.stringify({
         success: true,
         status: 'expired',
@@ -77,7 +112,10 @@ export default async function onRequestGet(context) {
     });
   } catch (error) {
     console.error('Error checking login status:', error);
-    return new Response(JSON.stringify({ error: 'Failed to check login status' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to check login status',
+      details: error.message
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

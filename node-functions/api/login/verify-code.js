@@ -3,10 +3,38 @@
 
 // 验证微信公众号发送的验证码，完成登录流程
 
-export default async function onRequestPost(context) {
+export default async function onRequest(context) {
   try {
+    // 只处理POST请求
+    if (context.request.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
     // 解析请求体
-    const { code, openid } = await context.request.json();
+    let requestBody;
+    try {
+      requestBody = await context.request.json();
+    } catch (parseError) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON format' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
+    const { code, openid } = requestBody;
     
     if (!code || !openid) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
@@ -21,7 +49,21 @@ export default async function onRequestPost(context) {
     }
     
     // 从KV获取挑战码
-    const challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+    let challengeDataStr;
+    try {
+      challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+    } catch (kvError) {
+      console.error('KV storage error when getting challenge:', kvError);
+      return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
     
     if (!challengeDataStr) {
       return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
@@ -40,7 +82,11 @@ export default async function onRequestPost(context) {
     // 检查挑战码是否过期
     if (Date.now() > challengeData.expiresAt) {
       // 删除过期挑战码
-      await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+      try {
+        await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+      } catch (kvError) {
+        console.error('KV storage error when deleting expired challenge:', kvError);
+      }
       return new Response(JSON.stringify({ error: 'Challenge code expired' }), {
         status: 401,
         headers: {
@@ -65,44 +111,67 @@ export default async function onRequestPost(context) {
       });
     }
     
-    // 生成登录令牌
-    const authToken = crypto.randomUUID();
+    // 生成登录令牌 - 使用时间戳+随机数替代crypto API
+    const authToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.floor(Math.random() * 10000)}`;
     
     // 登录会话有效期30天
     const authExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
     
     // 存储登录会话
-    await context.env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
-      userId: openid, // 使用openid作为用户ID
-      expiresAt: authExpiresAt,
-      loginMethod: 'wechat_mp'
-    }));
+    try {
+      await context.env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
+        userId: openid, // 使用openid作为用户ID
+        expiresAt: authExpiresAt,
+        loginMethod: 'wechat_mp'
+      }));
+    } catch (kvError) {
+      console.error('KV storage error when storing auth token:', kvError);
+      return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
     
     // 确保用户记录存在
-    const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${openid}`);
-    if (!userDataStr) {
-      await context.env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
-        userId: openid,
-        createdAt: Date.now(),
-        lastLoginAt: Date.now(),
-        history: []
-      }));
-    } else {
-      // 更新最后登录时间
-      const userData = JSON.parse(userDataStr);
-      await context.env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
-        ...userData,
-        lastLoginAt: Date.now()
-      }));
+    try {
+      const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${openid}`);
+      if (!userDataStr) {
+        await context.env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
+          userId: openid,
+          createdAt: Date.now(),
+          lastLoginAt: Date.now(),
+          history: []
+        }));
+      } else {
+        // 更新最后登录时间
+        const userData = JSON.parse(userDataStr);
+        await context.env.COVER_WAVE_KV.put(`user_${openid}`, JSON.stringify({
+          ...userData,
+          lastLoginAt: Date.now()
+        }));
+      }
+    } catch (kvError) {
+      console.error('KV storage error when updating user data:', kvError);
+      // 继续执行，不影响登录流程
     }
     
     // 更新挑战码状态为成功
-    await context.env.COVER_WAVE_KV.put(`login_challenge_${code}`, JSON.stringify({
-      ...challengeData,
-      status: 'success',
-      openid: openid,
-      authToken: authToken
-    }));
+    try {
+      await context.env.COVER_WAVE_KV.put(`login_challenge_${code}`, JSON.stringify({
+        ...challengeData,
+        status: 'success',
+        openid: openid,
+        authToken: authToken
+      }));
+    } catch (kvError) {
+      console.error('KV storage error when updating challenge status:', kvError);
+      // 继续执行，不影响登录流程
+    }
     
     return new Response(JSON.stringify({
       success: true,
@@ -120,7 +189,10 @@ export default async function onRequestPost(context) {
     });
   } catch (error) {
     console.error('Error verifying code:', error);
-    return new Response(JSON.stringify({ error: 'Failed to verify code' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to verify code',
+      details: error.message
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

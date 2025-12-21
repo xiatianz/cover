@@ -3,10 +3,38 @@
 
 // 验证微信公众号登录验证码并生成登录会话
 
-export default async function onRequestPost(context) {
+export default async function onRequest(context) {
   try {
+    // 只处理POST请求
+    if (context.request.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
     // 解析请求体
-    const { sessionId, code } = await context.request.json();
+    let requestBody;
+    try {
+      requestBody = await context.request.json();
+    } catch (parseError) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON format' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
+    const { sessionId, code } = requestBody;
     
     if (!sessionId || !code) {
       return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
@@ -21,7 +49,21 @@ export default async function onRequestPost(context) {
     }
     
     // 从KV获取验证码
-    const codeDataStr = await context.env.COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
+    let codeDataStr;
+    try {
+      codeDataStr = await context.env.COVER_WAVE_KV.get(`wechat_code_${sessionId}`);
+    } catch (kvError) {
+      console.error('KV storage error when getting wechat code:', kvError);
+      return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
     
     if (!codeDataStr) {
       return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
@@ -40,7 +82,11 @@ export default async function onRequestPost(context) {
     // 检查验证码是否过期
     if (Date.now() > codeData.expiresAt) {
       // 删除过期验证码
-      await context.env.COVER_WAVE_KV.delete(`wechat_code_${sessionId}`);
+      try {
+        await context.env.COVER_WAVE_KV.delete(`wechat_code_${sessionId}`);
+      } catch (kvError) {
+        console.error('KV storage error when deleting expired code:', kvError);
+      }
       return new Response(JSON.stringify({ error: 'Verification code expired' }), {
         status: 401,
         headers: {
@@ -79,13 +125,18 @@ export default async function onRequestPost(context) {
     }
     
     // 标记验证码为已使用
-    await context.env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
-      ...codeData,
-      used: true
-    }));
+    try {
+      await context.env.COVER_WAVE_KV.put(`wechat_code_${sessionId}`, JSON.stringify({
+        ...codeData,
+        used: true
+      }));
+    } catch (kvError) {
+      console.error('KV storage error when updating code status:', kvError);
+      // 继续执行，不影响登录流程
+    }
     
-    // 生成登录令牌
-    const authToken = crypto.randomUUID();
+    // 生成登录令牌 - 使用时间戳+随机数替代crypto API
+    const authToken = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.floor(Math.random() * 10000)}`;
     
     // 生成用户ID（基于sessionId的哈希，实际生产环境中应该使用用户的OpenID）
     const userId = await hashSessionId(sessionId);
@@ -94,28 +145,46 @@ export default async function onRequestPost(context) {
     const authExpiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
     
     // 存储登录会话
-    await context.env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
-      userId,
-      expiresAt: authExpiresAt,
-      loginMethod: 'wechat'
-    }));
+    try {
+      await context.env.COVER_WAVE_KV.put(`auth_${authToken}`, JSON.stringify({
+        userId,
+        expiresAt: authExpiresAt,
+        loginMethod: 'wechat'
+      }));
+    } catch (kvError) {
+      console.error('KV storage error when storing auth token:', kvError);
+      return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
     
     // 确保用户记录存在
-    const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
-    if (!userDataStr) {
-      await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
-        userId,
-        createdAt: Date.now(),
-        lastLoginAt: Date.now(),
-        history: []
-      }));
-    } else {
-      // 更新最后登录时间
-      const userData = JSON.parse(userDataStr);
-      await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
-        ...userData,
-        lastLoginAt: Date.now()
-      }));
+    try {
+      const userDataStr = await context.env.COVER_WAVE_KV.get(`user_${userId}`);
+      if (!userDataStr) {
+        await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
+          userId,
+          createdAt: Date.now(),
+          lastLoginAt: Date.now(),
+          history: []
+        }));
+      } else {
+        // 更新最后登录时间
+        const userData = JSON.parse(userDataStr);
+        await context.env.COVER_WAVE_KV.put(`user_${userId}`, JSON.stringify({
+          ...userData,
+          lastLoginAt: Date.now()
+        }));
+      }
+    } catch (kvError) {
+      console.error('KV storage error when updating user data:', kvError);
+      // 继续执行，不影响登录流程
     }
     
     return new Response(JSON.stringify({
@@ -134,7 +203,10 @@ export default async function onRequestPost(context) {
     });
   } catch (error) {
     console.error('Error verifying wechat code:', error);
-    return new Response(JSON.stringify({ error: 'Failed to verify code' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to verify code',
+      details: error.message
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -146,14 +218,17 @@ export default async function onRequestPost(context) {
   }
 }
 
-// 简单的哈希函数
-async function hashSessionId(sessionId) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(sessionId);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hash));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex.substring(0, 32); // 取前32位作为用户ID
+// 简单的哈希函数 - 替代crypto.subtle.digest
+function hashSessionId(sessionId) {
+  // 使用简单的字符串哈希算法
+  let hash = 0;
+  for (let i = 0; i < sessionId.length; i++) {
+    const char = sessionId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 转换为32位整数
+  }
+  // 转换为十六进制字符串，确保32位长度
+  return Math.abs(hash).toString(16).padStart(32, '0');
 }
 
 // 处理OPTIONS请求
