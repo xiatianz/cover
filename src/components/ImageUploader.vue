@@ -1,10 +1,17 @@
 <template>
-  <button v-if="uploadApiUrl" 
-          @click="uploadImage"
-          :disabled="isUploading"
-          class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
-    {{ isUploading ? '上传中...' : '获取外链' }}
-  </button>
+  <div class="flex gap-2">
+    <button v-if="uploadApiUrl" 
+            @click="uploadImage"
+            :disabled="isUploading"
+            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
+      {{ isUploading ? '上传中...' : '获取外链' }}
+    </button>
+    
+    <button @click="showHistory = true"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+      历史记录
+    </button>
+  </div>
   
   <!-- 上传进度和结果弹窗 -->
   <div v-if="showModal" 
@@ -85,6 +92,71 @@
        class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300">
     复制成功！
   </div>
+  
+  <!-- 历史记录弹窗 -->
+  <div v-if="showHistory" 
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="showHistory = false">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-[600px] max-h-[85vh] overflow-y-auto">
+      <!-- 弹窗头部 -->
+      <div class="flex items-center justify-between p-4 border-b">
+        <h3 class="text-lg font-semibold">历史记录</h3>
+        <div class="flex gap-2">
+          <button @click="clearHistory" 
+                  class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
+            清空
+          </button>
+          <button @click="showHistory = false" 
+                  class="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors">
+            关闭
+          </button>
+        </div>
+      </div>
+      
+      <!-- 弹窗内容 -->
+      <div class="p-4">
+        <div v-if="history.length === 0" class="text-center py-8 text-gray-500">
+          暂无历史记录
+        </div>
+        
+        <div v-else class="space-y-3">
+          <div v-for="(item, index) in history" :key="index" 
+               class="border rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-gray-500">{{ item.timestamp }}</span>
+              <button @click="removeHistoryItem(index)" 
+                      class="text-red-500 hover:text-red-700 text-sm">
+                删除
+              </button>
+            </div>
+            
+            <div class="space-y-2">
+              <div class="text-sm font-medium">
+                {{ item.name }}
+              </div>
+              <div class="bg-gray-50 p-2 rounded text-xs font-mono break-all overflow-x-auto">
+                {{ item.url }}
+              </div>
+              
+              <div class="flex gap-2 flex-wrap">
+                <button @click="copyUrlToClipboard(item.url)" 
+                        class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                  复制链接
+                </button>
+                <button @click="copyMarkdownToClipboard(item.url)" 
+                        class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                  复制Markdown
+                </button>
+                <button @click="copyHtmlToClipboard(item.url)" 
+                        class="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors">
+                  复制HTML
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -110,12 +182,14 @@ export default {
       imageDomain: import.meta.env.VITE_APP_IMAGE_DOMAIN || 'https://img.58sb.cn',
       uploadToken: import.meta.env.VITE_APP_UPLOAD_TOKEN,
       showModal: false,
+      showHistory: false,
       isUploading: false,
       uploadedImageUrl: '',
       isSuccess: false,
       errorMessage: '',
       showCopyTip: false,
-      formatUrls: {}
+      formatUrls: {},
+      history: []
     }
   },
   computed: {
@@ -152,7 +226,205 @@ export default {
       return formats;
     }
   },
+  
+  mounted() {
+    // 加载历史记录
+    this.loadHistory();
+    
+    // 监听全局登录/登出事件
+    window.addEventListener('userLoggedIn', this.handleUserLoggedIn);
+    window.addEventListener('userLoggedOut', this.handleUserLoggedOut);
+  },
+  
+  beforeUnmount() {
+    window.removeEventListener('userLoggedIn', this.handleUserLoggedIn);
+    window.removeEventListener('userLoggedOut', this.handleUserLoggedOut);
+  },
+  
   methods: {
+    // 检查用户是否登录
+    isUserLoggedIn() {
+      return !!localStorage.getItem('coverWaveAuthToken');
+    },
+    
+    // 获取认证令牌
+    getAuthToken() {
+      return localStorage.getItem('coverWaveAuthToken');
+    },
+    
+    // 加载历史记录
+    async loadHistory() {
+      try {
+        if (this.isUserLoggedIn()) {
+          // 从KV存储加载历史记录
+          await this.loadHistoryFromKV();
+        } else {
+          // 从本地存储加载历史记录
+          const savedHistory = localStorage.getItem('coverWaveUploadHistory');
+          if (savedHistory) {
+            this.history = JSON.parse(savedHistory);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+        this.history = [];
+      }
+    },
+    
+    // 从KV存储加载历史记录
+    async loadHistoryFromKV() {
+      try {
+        const authToken = this.getAuthToken();
+        if (!authToken) return;
+        
+        const response = await fetch('/api/history', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          this.history = data.history;
+          // 同时保存到本地，作为备份
+          this.saveHistoryToLocal();
+        }
+      } catch (error) {
+        console.error('Failed to load history from KV:', error);
+        // 加载失败时，回退到本地存储
+        const savedHistory = localStorage.getItem('coverWaveUploadHistory');
+        if (savedHistory) {
+          this.history = JSON.parse(savedHistory);
+        }
+      }
+    },
+    
+    // 保存历史记录到本地
+    saveHistoryToLocal() {
+      try {
+        localStorage.setItem('coverWaveUploadHistory', JSON.stringify(this.history));
+      } catch (error) {
+        console.error('Failed to save history to local:', error);
+      }
+    },
+    
+    // 保存历史记录到KV存储
+    async saveHistoryToKV() {
+      try {
+        if (!this.isUserLoggedIn()) return;
+        
+        const authToken = this.getAuthToken();
+        if (!authToken) return;
+        
+        // KV存储API会处理整个历史记录的更新
+        // 这里只需要确保本地历史记录是最新的
+        await this.loadHistoryFromKV();
+      } catch (error) {
+        console.error('Failed to sync history to KV:', error);
+      }
+    },
+    
+    // 添加历史记录
+    async addHistory(url, name) {
+      const timestamp = new Date().toLocaleString();
+      const historyItem = {
+        url,
+        name,
+        timestamp
+      };
+      
+      // 添加到历史记录开头
+      this.history.unshift(historyItem);
+      
+      // 限制历史记录数量，最多保存50条
+      if (this.history.length > 50) {
+        this.history = this.history.slice(0, 50);
+      }
+      
+      // 保存到本地存储
+      this.saveHistoryToLocal();
+      
+      // 如果用户已登录，同步到KV存储
+      if (this.isUserLoggedIn()) {
+        try {
+          const authToken = this.getAuthToken();
+          await fetch('/api/history', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(historyItem)
+          });
+        } catch (error) {
+          console.error('Failed to add history to KV:', error);
+        }
+      }
+    },
+    
+    // 删除单个历史记录
+    async removeHistoryItem(index) {
+      this.history.splice(index, 1);
+      this.saveHistoryToLocal();
+      
+      // 如果用户已登录，同步到KV存储
+      if (this.isUserLoggedIn()) {
+        await this.saveHistoryToKV();
+      }
+    },
+    
+    // 清空历史记录
+    async clearHistory() {
+      if (confirm('确定要清空所有历史记录吗？')) {
+        this.history = [];
+        this.saveHistoryToLocal();
+        
+        // 如果用户已登录，同步到KV存储
+        if (this.isUserLoggedIn()) {
+          try {
+            const authToken = this.getAuthToken();
+            await fetch('/api/history', {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${authToken}`
+              }
+            });
+          } catch (error) {
+            console.error('Failed to clear history from KV:', error);
+          }
+        }
+      }
+    },
+    
+    // 处理用户登录事件
+    async handleUserLoggedIn() {
+      // 登录后，从KV同步历史记录
+      await this.loadHistoryFromKV();
+    },
+    
+    // 处理用户登出事件
+    handleUserLoggedOut() {
+      // 登出后，确保使用本地存储的历史记录
+      const savedHistory = localStorage.getItem('coverWaveUploadHistory');
+      if (savedHistory) {
+        this.history = JSON.parse(savedHistory);
+      }
+    },
+    
+    // 复制不同格式的链接到剪贴板
+    copyUrlToClipboard(url) {
+      this.copyToClipboard(url);
+    },
+    
+    copyMarkdownToClipboard(url) {
+      this.copyToClipboard(`![image](${url})`);
+    },
+    
+    copyHtmlToClipboard(url) {
+      this.copyToClipboard(`<img src="${url}" alt="image" />`);
+    },
+    
     uploadImage() {
       if (this.isUploading) return;
       
@@ -191,6 +463,9 @@ export default {
           // 只存储当前格式的URL
           this.formatUrls = {};
           this.formatUrls[this.currentFormat] = result.url;
+          
+          // 添加到历史记录
+          this.addHistory(result.url, `${result.name}格式图片`);
         } else {
           this.isSuccess = false;
           this.errorMessage = result.error || '上传失败，请重试';

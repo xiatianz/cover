@@ -1,0 +1,103 @@
+// 文件路径 ./node-functions/api/login/status.js
+// 访问路径 https://www.58sb.cn/api/login/status
+
+// 查询登录状态，用于前端轮询
+
+export default async function onRequestGet(context) {
+  try {
+    // 获取查询参数
+    const url = new URL(context.request.url);
+    const code = url.searchParams.get('code');
+    
+    if (!code) {
+      return new Response(JSON.stringify({ error: 'Missing code parameter' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
+    // 从KV获取挑战码状态
+    const challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+    
+    if (!challengeDataStr) {
+      return new Response(JSON.stringify({
+        success: true,
+        status: 'expired',
+        message: 'Challenge code expired'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
+    const challengeData = JSON.parse(challengeDataStr);
+    
+    // 检查挑战码是否过期
+    if (Date.now() > challengeData.expiresAt) {
+      await context.env.COVER_WAVE_KV.delete(`login_challenge_${code}`);
+      return new Response(JSON.stringify({
+        success: true,
+        status: 'expired',
+        message: 'Challenge code expired'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
+    }
+    
+    return new Response(JSON.stringify({
+      success: true,
+      status: challengeData.status,
+      authToken: challengeData.authToken || null,
+      userId: challengeData.openid || null,
+      message: challengeData.status === 'pending' ? 'Waiting for verification' : 'Login completed'
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    });
+  } catch (error) {
+    console.error('Error checking login status:', error);
+    return new Response(JSON.stringify({ error: 'Failed to check login status' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    });
+  }
+}
+
+// 处理OPTIONS请求
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}
