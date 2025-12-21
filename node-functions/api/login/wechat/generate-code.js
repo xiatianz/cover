@@ -2,7 +2,7 @@
 // 访问路径 https://www.58sb.cn/api/login/wechat/generate-code
 
 // 导入Supabase客户端
-import { wechatCode } from '../../../utils/supabase.js';
+import { createSupabaseClient } from '../../../utils/supabase.js';
 
 // 生成微信公众号登录验证码并存储到Supabase
 export default async function onRequest({ request, params, env }) {
@@ -31,7 +31,16 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储验证码到Supabase
     try {
-      const { error } = await wechatCode.create(sessionId, code, expiresAt);
+      const supabase = createSupabaseClient(env);
+      const { error } = await supabase
+        .from('wechat_codes')
+        .insert({
+          session_id: sessionId,
+          code,
+          expires_at: new Date(expiresAt),
+          used: false
+        })
+        .single();
       if (error) {
         throw error;
       }

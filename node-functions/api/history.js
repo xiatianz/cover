@@ -2,7 +2,7 @@
 // 访问路径 https://www.58sb.cn/api/history
 
 // 导入Supabase客户端
-import { authSession, user } from '../utils/supabase.js';
+import { createSupabaseClient } from '../utils/supabase.js';
 
 // 管理用户历史记录
 export default async function onRequest({ request, params, env }) {
@@ -21,7 +21,13 @@ export default async function onRequest({ request, params, env }) {
   }
   
   // 从Supabase获取认证信息
-  const { data: authData, error: authError } = await authSession.get(authToken);
+  const supabase = createSupabaseClient(env);
+  const { data: authData, error: authError } = await supabase
+    .from('auth_sessions')
+    .select('*')
+    .eq('auth_token', authToken)
+    .single();
+    
   if (authError || !authData) {
     return new Response(JSON.stringify({ error: 'Unauthorized: Invalid auth token' }), {
       status: 401,
@@ -42,17 +48,17 @@ export default async function onRequest({ request, params, env }) {
   
   // 处理GET请求 - 获取历史记录
   if (request.method === 'GET') {
-    return handleGetHistory(userId);
+    return handleGetHistory(supabase, userId);
   }
   
   // 处理POST请求 - 添加历史记录
   if (request.method === 'POST') {
-    return handleAddHistory(request, userId);
+    return handleAddHistory(supabase, request, userId);
   }
   
   // 处理DELETE请求 - 清除历史记录
   if (request.method === 'DELETE') {
-    return handleClearHistory(userId);
+    return handleClearHistory(supabase, userId);
   }
   
   return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -62,10 +68,15 @@ export default async function onRequest({ request, params, env }) {
 }
 
 // 处理GET请求 - 获取历史记录
-async function handleGetHistory(userId) {
+async function handleGetHistory(supabase, userId) {
   try {
     // 获取用户数据
-    const { data: userData, error: userError } = await user.get(userId);
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
     if (userError || !userData) {
       return new Response(JSON.stringify({
         success: true,
@@ -93,7 +104,7 @@ async function handleGetHistory(userId) {
 }
 
 // 处理POST请求 - 添加历史记录
-async function handleAddHistory(request, userId) {
+async function handleAddHistory(supabase, request, userId) {
   try {
     const record = await request.json();
     
@@ -105,7 +116,12 @@ async function handleAddHistory(request, userId) {
     }
     
     // 获取用户数据
-    const { data: userData, error: userError } = await user.get(userId);
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
     let updatedUserData = {
       userId,
       createdAt: new Date(),
@@ -136,9 +152,13 @@ async function handleAddHistory(request, userId) {
     }
     
     // 更新用户数据
-    await user.update(userId, {
-      history: updatedUserData.history
-    });
+    await supabase
+      .from('users')
+      .update({
+        history: updatedUserData.history
+      })
+      .eq('user_id', userId)
+      .single();
     
     return new Response(JSON.stringify({
       success: true,
@@ -157,12 +177,16 @@ async function handleAddHistory(request, userId) {
 }
 
 // 处理DELETE请求 - 清除历史记录
-async function handleClearHistory(userId) {
+async function handleClearHistory(supabase, userId) {
   try {
     // 更新用户数据，清空历史记录
-    await user.update(userId, {
-      history: []
-    });
+    await supabase
+      .from('users')
+      .update({
+        history: []
+      })
+      .eq('user_id', userId)
+      .single();
     
     return new Response(JSON.stringify({
       success: true,

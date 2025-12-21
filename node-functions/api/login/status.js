@@ -4,7 +4,7 @@
 // 查询登录状态，用于前端轮询
 
 // 导入Supabase客户端
-import { loginChallenge } from '../../utils/supabase.js';
+import { createSupabaseClient } from '../../utils/supabase.js';
 
 export default async function onRequest({ request, params, env }) {
   try {
@@ -40,7 +40,13 @@ export default async function onRequest({ request, params, env }) {
     // 从Supabase获取挑战码状态
     let challengeData;
     try {
-      const { data, error } = await loginChallenge.get(code);
+      const supabase = createSupabaseClient(env);
+      const { data, error } = await supabase
+        .from('login_challenges')
+        .select('*')
+        .eq('challenge', code)
+        .single();
+        
       if (error) {
         console.error('Supabase error:', error);
         return new Response(JSON.stringify({
@@ -98,7 +104,11 @@ export default async function onRequest({ request, params, env }) {
     // 检查挑战码是否过期
     if (Date.now() > new Date(challengeData.expires_at).getTime()) {
       try {
-        await loginChallenge.delete(code);
+        const supabase = createSupabaseClient(env);
+        await supabase
+          .from('login_challenges')
+          .delete()
+          .eq('challenge', code);
       } catch (supabaseError) {
         console.error('Supabase error when deleting:', supabaseError);
       }

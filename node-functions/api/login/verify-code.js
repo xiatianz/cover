@@ -4,7 +4,7 @@
 // 验证微信公众号发送的验证码，完成登录流程
 
 // 导入Supabase客户端
-import { loginChallenge, authSession, user } from '../../utils/supabase.js';
+import { createSupabaseClient } from '../../utils/supabase.js';
 
 export default async function onRequest({ request, params, env }) {
   try {
@@ -52,7 +52,13 @@ export default async function onRequest({ request, params, env }) {
     }
     
     // 从Supabase获取挑战码
-    const { data: challengeData, error: challengeError } = await loginChallenge.get(code);
+    const supabase = createSupabaseClient(env);
+    const { data: challengeData, error: challengeError } = await supabase
+      .from('login_challenges')
+      .select('*')
+      .eq('challenge', code)
+      .single();
+      
     if (challengeError || !challengeData) {
       console.error('Supabase error when getting challenge:', challengeError);
       return new Response(JSON.stringify({ error: 'Invalid or expired challenge code' }), {
@@ -70,7 +76,10 @@ export default async function onRequest({ request, params, env }) {
     if (Date.now() > new Date(challengeData.expires_at).getTime()) {
       // 删除过期挑战码
       try {
-        await loginChallenge.delete(code);
+        await supabase
+          .from('login_challenges')
+          .delete()
+          .eq('challenge', code);
       } catch (supabaseError) {
         console.error('Supabase error when deleting expired challenge:', supabaseError);
       }
@@ -106,7 +115,15 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await authSession.create(authToken, openid, authExpiresAt, 'wechat_mp');
+      await supabase
+        .from('auth_sessions')
+        .insert({
+          auth_token: authToken,
+          user_id: openid,
+          expires_at: new Date(authExpiresAt),
+          login_method: 'wechat_mp'
+        })
+        .single();
     } catch (supabaseError) {
       console.error('Supabase error when storing auth token:', supabaseError);
       return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
@@ -122,15 +139,32 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const { data: existingUser, error: getUserError } = await user.get(openid);
+      const { data: existingUser, error: getUserError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', openid)
+        .single();
+        
       if (getUserError || !existingUser) {
         // 创建新用户
-        await user.create(openid);
+        await supabase
+          .from('users')
+          .insert({
+            user_id: openid,
+            created_at: new Date(),
+            last_login_at: new Date(),
+            history: []
+          })
+          .single();
       } else {
         // 更新最后登录时间
-        await user.update(openid, {
-          last_login_at: new Date()
-        });
+        await supabase
+          .from('users')
+          .update({
+            last_login_at: new Date()
+          })
+          .eq('user_id', openid)
+          .single();
       }
     } catch (supabaseError) {
       console.error('Supabase error when updating user data:', supabaseError);
@@ -139,11 +173,15 @@ export default async function onRequest({ request, params, env }) {
     
     // 更新挑战码状态为成功
     try {
-      await loginChallenge.update(code, {
-        status: 'success',
-        openid: openid,
-        auth_token: authToken
-      });
+      await supabase
+        .from('login_challenges')
+        .update({
+          status: 'success',
+          openid: openid,
+          auth_token: authToken
+        })
+        .eq('challenge', code)
+        .single();
     } catch (supabaseError) {
       console.error('Supabase error when updating challenge status:', supabaseError);
       // 继续执行，不影响登录流程

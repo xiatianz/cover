@@ -2,7 +2,7 @@
 // 访问路径 https://www.58sb.cn/api/login/wechat/verify-code
 
 // 导入Supabase客户端
-import { wechatCode, authSession, user } from '../../../utils/supabase.js';
+import { createSupabaseClient } from '../../../utils/supabase.js';
 
 // 验证微信公众号登录验证码并生成登录会话
 export default async function onRequest({ request, params, env }) {
@@ -50,8 +50,15 @@ export default async function onRequest({ request, params, env }) {
       });
     }
     
+    const supabase = createSupabaseClient(env);
+    
     // 从Supabase获取验证码
-    const { data: codeData, error: getCodeError } = await wechatCode.get(sessionId);
+    const { data: codeData, error: getCodeError } = await supabase
+      .from('wechat_codes')
+      .select('*')
+      .eq('session_id', sessionId)
+      .single();
+      
     if (getCodeError || !codeData) {
       console.error('Supabase error when getting wechat code:', getCodeError);
       return new Response(JSON.stringify({ error: 'Invalid session or code expired' }), {
@@ -69,7 +76,10 @@ export default async function onRequest({ request, params, env }) {
     if (Date.now() > new Date(codeData.expires_at).getTime()) {
       // 删除过期验证码
       try {
-        await wechatCode.delete(sessionId);
+        await supabase
+          .from('wechat_codes')
+          .delete()
+          .eq('session_id', sessionId);
       } catch (supabaseError) {
         console.error('Supabase error when deleting expired code:', supabaseError);
       }
@@ -112,9 +122,10 @@ export default async function onRequest({ request, params, env }) {
     
     // 标记验证码为已使用
     try {
-      await wechatCode.update(sessionId, {
-        used: true
-      });
+      await supabase
+        .from('wechat_codes')
+        .update({ used: true })
+        .eq('session_id', sessionId);
     } catch (supabaseError) {
       console.error('Supabase error when updating code status:', supabaseError);
       // 继续执行，不影响登录流程
@@ -131,7 +142,15 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储登录会话
     try {
-      await authSession.create(authToken, userId, authExpiresAt, 'wechat');
+      await supabase
+        .from('auth_sessions')
+        .insert({
+          auth_token: authToken,
+          user_id: userId,
+          expires_at: new Date(authExpiresAt),
+          login_method: 'wechat'
+        })
+        .single();
     } catch (supabaseError) {
       console.error('Supabase error when storing auth token:', supabaseError);
       return new Response(JSON.stringify({ error: 'Failed to store authentication token' }), {
@@ -147,15 +166,32 @@ export default async function onRequest({ request, params, env }) {
     
     // 确保用户记录存在
     try {
-      const { data: existingUser, error: getUserError } = await user.get(userId);
+      const { data: existingUser, error: getUserError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+        
       if (getUserError || !existingUser) {
         // 创建新用户
-        await user.create(userId);
+        await supabase
+          .from('users')
+          .insert({
+            user_id: userId,
+            created_at: new Date(),
+            last_login_at: new Date(),
+            history: []
+          })
+          .single();
       } else {
         // 更新最后登录时间
-        await user.update(userId, {
-          last_login_at: new Date()
-        });
+        await supabase
+          .from('users')
+          .update({
+            last_login_at: new Date()
+          })
+          .eq('user_id', userId)
+          .single();
       }
     } catch (supabaseError) {
       console.error('Supabase error when updating user data:', supabaseError);

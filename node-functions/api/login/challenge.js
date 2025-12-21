@@ -3,8 +3,8 @@
 
 // 生成登录挑战码，用于微信公众号登录
 
-// 导入Supabase客户端
-import { loginChallenge } from '../../utils/supabase.js';
+// 导入Supabase客户端和工具函数
+import { createSupabaseClient } from '../../utils/supabase.js';
 
 export default async function onRequest({ request, params, env }) {
   try {
@@ -32,7 +32,18 @@ export default async function onRequest({ request, params, env }) {
     
     // 存储挑战码到Supabase
     try {
-      await loginChallenge.create(challenge, sessionId, expiresAt);
+      const supabase = createSupabaseClient(env);
+      await supabase
+        .from('login_challenges')
+        .insert({
+          challenge,
+          session_id: sessionId,
+          expires_at: new Date(expiresAt),
+          status: 'pending',
+          openid: null,
+          auth_token: null
+        })
+        .single();
     } catch (supabaseError) {
       console.error('Supabase error:', supabaseError);
       // 即使Supabase存储失败，也返回挑战码，后续登录流程会处理

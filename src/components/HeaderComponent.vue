@@ -224,19 +224,28 @@ export default {
         // 检查登录状态
         async checkLoginStatus() {
             try {
-                // 使用Supabase检查登录状态
+                // 检查Supabase Auth会话
                 const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
+                
+                // 同时检查localStorage中的微信登录令牌
+                const authToken = localStorage.getItem('coverWaveAuthToken');
+                const userId = localStorage.getItem('coverWaveUserId');
+                
+                // 如果有任意一种登录方式有效，就认为用户已登录
+                if (session || (authToken && userId)) {
                     this.isLoggedIn = true;
-                    this.userId = session.user.id;
+                    this.userId = session ? session.user.id : userId;
                 } else {
                     this.isLoggedIn = false;
                     this.userId = '';
                 }
             } catch (error) {
                 console.error('检查登录状态失败:', error);
-                this.isLoggedIn = false;
-                this.userId = '';
+                // 发生错误时，检查localStorage作为备选
+                const authToken = localStorage.getItem('coverWaveAuthToken');
+                const userId = localStorage.getItem('coverWaveUserId');
+                this.isLoggedIn = !!authToken && !!userId;
+                this.userId = userId || '';
             }
         },
         
@@ -278,25 +287,19 @@ export default {
             this.emailMessage = '';
             
             try {
-                let result;
+                console.log('开始邮件登录/注册，模式:', this.emailLoginMode, '邮箱:', this.email);
                 
-                if (this.emailLoginMode === 'login') {
-                    // 登录
-                    result = await supabase.auth.signInWithOtp({
-                        email: this.email,
-                        options: {
-                            emailRedirectTo: window.location.origin
-                        }
-                    });
-                } else {
-                    // 注册
-                    result = await supabase.auth.signUp({
-                        email: this.email,
-                        options: {
-                            emailRedirectTo: window.location.origin
-                        }
-                    });
-                }
+                // 对于密码less登录，无论是登录还是注册，都使用signInWithOtp方法
+                console.log('调用supabase.auth.signInWithOtp');
+                const result = await supabase.auth.signInWithOtp({
+                    email: this.email,
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                        shouldCreateUser: this.emailLoginMode === 'signup' // 注册时自动创建用户
+                    }
+                });
+                
+                console.log('Supabase返回结果:', result);
                 
                 if (result.error) {
                     throw result.error;
@@ -304,7 +307,7 @@ export default {
                 
                 // 显示成功消息
                 this.emailMessageType = 'success';
-                this.emailMessage = `登录链接已发送到 ${this.email}，请查收邮件完成登录。`;
+                this.emailMessage = `登录链接已发送到 ${this.email}，请查收邮件完成${this.emailLoginMode === 'login' ? '登录' : '注册'}。`;
                 
             } catch (error) {
                 console.error('邮件登录/注册失败:', error);
@@ -318,15 +321,20 @@ export default {
         // 请求登录挑战码
         async requestChallenge() {
             try {
+                console.log('开始请求登录挑战码');
                 const response = await fetch('/api/login/challenge', {
                     method: 'GET'
                 });
                 
+                console.log('挑战码生成API响应:', response.status, response.statusText);
                 const data = await response.json();
+                console.log('挑战码生成API返回数据:', data);
+                
                 if (data.success) {
                     this.challenge = data.challenge;
-                    // 建立WebSocket连接，替代轮询
-                    this.startWebSocketLoginStatus();
+                    console.log('挑战码生成成功:', this.challenge);
+                    // 直接使用轮询检查登录状态
+                    this.startPollingLoginStatus();
                 } else {
                     throw new Error('Failed to generate challenge code');
                 }
@@ -345,55 +353,65 @@ export default {
             // 关闭之前的WebSocket连接（如果有）
             this.closeWebSocket();
             
-            // 创建WebSocket连接
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            this.ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/login/ws?code=${this.challenge}`);
-            
-            // 监听WebSocket消息
-            this.ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.success) {
-                        if (data.status === 'success') {
-                            // 登录成功
-                            this.loginStatus = 'success';
+            try {
+                // 创建WebSocket连接
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                this.ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/login/ws?code=${this.challenge}`);
+                
+                // 监听WebSocket消息
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.success) {
+                            if (data.status === 'success') {
+                                // 登录成功
+                                this.loginStatus = 'success';
+                                this.closeWebSocket();
+                                this.completeLogin(data.authToken, data.userId);
+                            } else if (data.status === 'expired') {
+                                // 挑战码过期
+                                this.loginStatus = 'expired';
+                                this.closeWebSocket();
+                            } else if (data.status === 'failed') {
+                                // 登录失败
+                                this.loginStatus = 'failed';
+                                this.closeWebSocket();
+                            }
+                            // 继续等待 pending 状态
+                        } else {
+                            // WebSocket返回错误，降级为轮询
+                            console.error('WebSocket error:', data);
                             this.closeWebSocket();
-                            this.completeLogin(data.authToken, data.userId);
-                        } else if (data.status === 'expired') {
-                            // 挑战码过期
-                            this.loginStatus = 'expired';
-                            this.closeWebSocket();
-                        } else if (data.status === 'failed') {
-                            // 登录失败
-                            this.loginStatus = 'failed';
-                            this.closeWebSocket();
+                            this.startPollingLoginStatus();
                         }
-                        // 继续等待 pending 状态
-                    } else {
-                        // WebSocket返回错误，降级为轮询
-                        console.error('WebSocket error:', data);
+                    } catch (error) {
+                        console.error('WebSocket message parse error:', error);
                         this.closeWebSocket();
                         this.startPollingLoginStatus();
                     }
-                } catch (error) {
-                    console.error('WebSocket message parse error:', error);
+                };
+                
+                // 监听WebSocket错误
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket connection error:', error);
                     this.closeWebSocket();
+                    // 降级为轮询
                     this.startPollingLoginStatus();
-                }
-            };
-            
-            // 监听WebSocket错误
-            this.ws.onerror = (error) => {
-                console.error('WebSocket connection error:', error);
-                this.closeWebSocket();
+                };
+                
+                // 监听WebSocket关闭
+                this.ws.onclose = (event) => {
+                    console.log('WebSocket connection closed:', event.code, event.reason);
+                    // 如果不是正常关闭（code 1000），则降级为轮询
+                    if (event.code !== 1000) {
+                        this.startPollingLoginStatus();
+                    }
+                };
+            } catch (error) {
+                console.error('Failed to create WebSocket connection:', error);
                 // 降级为轮询
                 this.startPollingLoginStatus();
-            };
-            
-            // 监听WebSocket关闭
-            this.ws.onclose = () => {
-                console.log('WebSocket connection closed');
-            };
+            }
         },
         
         // 关闭WebSocket连接
@@ -426,12 +444,17 @@ export default {
         // 检查登录状态（轮询，仅作为WebSocket失败时的降级方案）
         async checkLoginStatusPoll() {
             try {
+                console.log('开始轮询检查登录状态，挑战码:', this.challenge);
                 const response = await fetch(`/api/login/status?code=${this.challenge}`, {
                     method: 'GET'
                 });
                 
+                console.log('登录状态API响应:', response.status, response.statusText);
                 const data = await response.json();
+                console.log('登录状态API返回数据:', data);
+                
                 if (data.success) {
+                    console.log('登录状态:', data.status);
                     if (data.status === 'success') {
                         // 登录成功
                         this.loginStatus = 'success';

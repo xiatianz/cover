@@ -3,9 +3,6 @@
 
 // 处理登录状态的WebSocket连接，替代轮询
 
-// 导入Supabase客户端
-import { loginChallenge } from '../../utils/supabase.js';
-
 export default async function onRequest({ request, params, env }) {
   // 检查是否为WebSocket升级请求
   if (request.headers.get('upgrade') !== 'websocket') {
