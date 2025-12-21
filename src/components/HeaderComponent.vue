@@ -404,15 +404,15 @@ export default {
             }
         },
         
-        // 开始轮询登录状态（降级方案）
+        // 开始轮询登录状态（仅作为最后降级方案，使用更长的间隔）
         startPollingLoginStatus() {
             // 清除之前的轮询
             this.stopPollingLoginStatus();
             
-            // 每2秒轮询一次
+            // 每5秒轮询一次，减少服务器压力
             this.pollingInterval = setInterval(() => {
                 this.checkLoginStatusPoll();
-            }, 2000);
+            }, 5000);
         },
         
         // 停止轮询登录状态
@@ -423,7 +423,7 @@ export default {
             }
         },
         
-        // 检查登录状态（轮询，降级方案）
+        // 检查登录状态（轮询，仅作为WebSocket失败时的降级方案）
         async checkLoginStatusPoll() {
             try {
                 const response = await fetch(`/api/login/status?code=${this.challenge}`, {
