@@ -64,7 +64,7 @@ export default async function onRequestPost({ request, params, env }) {
       fetch(url, { 
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${uploadToken}` // 尝试使用Bearer前缀
+          'Authorization': uploadToken // 恢复原来的认证方式，不使用Bearer前缀
         },
         body: newFormData
       }),
