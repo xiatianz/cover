@@ -1,5 +1,5 @@
 // Supabase客户端配置，用于Edge Functions
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.1';
+import { createClient } from '@supabase/supabase-js';
 
 // 从环境变量获取配置
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
