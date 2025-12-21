@@ -27,7 +27,7 @@ export default async function onRequest(context) {
     // 挑战码有效期5分钟
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
-    // 存储挑战码到KV - 使用try-catch处理可能的KV存储错误
+    // 存储挑战码到KV
     try {
       await context.env.COVER_WAVE_KV.put(`login_challenge_${challenge}`, JSON.stringify({
         sessionId,
@@ -38,7 +38,18 @@ export default async function onRequest(context) {
       }));
     } catch (kvError) {
       console.error('KV storage error:', kvError);
-      // 即使KV存储失败，也返回挑战码，后续登录流程会处理
+      return new Response(JSON.stringify({ 
+        error: 'Failed to store challenge code',
+        details: kvError.message
+      }), { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      });
     }
     
     return new Response(JSON.stringify({

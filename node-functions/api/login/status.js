@@ -36,14 +36,16 @@ export default async function onRequest(context) {
     
     // 从KV获取挑战码状态
     let challengeDataStr;
+    const key = `login_challenge_${code}`;
     try {
-      challengeDataStr = await context.env.COVER_WAVE_KV.get(`login_challenge_${code}`);
+      challengeDataStr = await context.env.COVER_WAVE_KV.get(key);
+      console.log(`KV Get Result for ${key}:`, challengeDataStr);
     } catch (kvError) {
       console.error('KV storage error:', kvError);
       return new Response(JSON.stringify({
         success: true,
-        status: 'expired',
-        message: 'Challenge code expired'
+        status: 'pending', // 改为pending，避免刚生成就显示过期
+        message: 'Challenge code pending'
       }), {
         status: 200,
         headers: {
@@ -56,10 +58,11 @@ export default async function onRequest(context) {
     }
     
     if (!challengeDataStr) {
+      console.log(`Challenge code ${code} not found in KV`);
       return new Response(JSON.stringify({
         success: true,
-        status: 'expired',
-        message: 'Challenge code expired'
+        status: 'pending', // 改为pending，避免刚生成就显示过期
+        message: 'Challenge code pending'
       }), {
         status: 200,
         headers: {
