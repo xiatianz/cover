@@ -34,6 +34,7 @@
       </div>
       <button class="text-pink-500 font-bold" @click="toggleTips">小提示</button>
       <button class="text-blue-500 font-bold" @click="toggleIconTutorial">图标教程</button>
+      <span class="text-red-500 font-bold">访问统计：<span class="text-red-600 font-bold">{{ visitCount }}</span></span>
     </div>
     
     <!-- 小提示弹窗 -->
@@ -137,8 +138,15 @@ export default {
       showIconTutorial: false,
       icpNumber: import.meta.env.VITE_APP_ICP_NUMBER,
       policeNumber: import.meta.env.VITE_APP_POLICE_NUMBER,
-      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/public/police-icon.png'
+      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/public/police-icon.png',
+      visitCount: 0
     };
+  },
+  mounted() {
+    // 获取访问量
+    this.getVisitCount();
+    // 更新访问量
+    this.updateVisitCount();
   },
   methods: {
     toggleTips() {
@@ -151,6 +159,32 @@ export default {
     },
     toggleIconTutorial() {
       this.showIconTutorial = !this.showIconTutorial;
+    },
+    async getVisitCount() {
+      try {
+        const response = await fetch('/api/visit', {
+          method: 'GET'
+        });
+        const data = await response.json();
+        if (data.success) {
+          this.visitCount = data.visitCount;
+        }
+      } catch (error) {
+        console.error('获取访问量失败:', error);
+      }
+    },
+    async updateVisitCount() {
+      try {
+        const response = await fetch('/api/visit', {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+          this.visitCount = data.visitCount;
+        }
+      } catch (error) {
+        console.error('更新访问量失败:', error);
+      }
     }
   }
 };

@@ -16,7 +16,7 @@ export const state = reactive({
     shadowOffsetY: 1,
     shadowStrength: 60,
     watermark: defaultConfig.watermark,
-    textSize: 200,
+    textSize: 120,
     lineHeight: 1,
     text3D: 0,
     squareSize: 300,
