@@ -1,9 +1,20 @@
 // Supabase客户端配置，用于Edge Functions
+
+// 模拟Deno对象，解决supabase-js库中的ReferenceError: Deno is not defined错误
+if (typeof Deno === 'undefined') {
+  global.Deno = {
+    unrefTimer: (timerId) => {
+      // 在Node.js中，setTimeout/setInterval返回的是数字，不需要unref
+      // 这里只是一个空实现，用于避免supabase-js库报错
+    }
+  };
+}
+
 import { createClient } from '@supabase/supabase-js';
 
 // 从环境变量获取配置
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 // 创建并导出Supabase客户端实例
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

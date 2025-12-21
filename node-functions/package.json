@@ -1,0 +1,9 @@
+{
+  "name": "edge-functions",
+  "version": "1.0.0",
+  "description": "Edge Functions for Cover Wave",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.1"
+  }
+}
