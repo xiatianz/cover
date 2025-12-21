@@ -15,5 +15,15 @@ export const wechatConfig = {
 export const defaultConfig = {
   watermark: 'Canvas-Ruom',
   text: 'Canvas-Ruom',
-  fontFamily: 'Arial'
+  fontFamily: 'Arial',
+  fontOptions: [
+    { label: 'Arial', value: 'Arial' },
+    { label: 'Helvetica', value: 'Helvetica' },
+    { label: 'Times New Roman', value: 'Times New Roman' },
+    { label: 'Courier New', value: 'Courier New' },
+    { label: 'Georgia', value: 'Georgia' },
+    { label: 'Verdana', value: 'Verdana' }
+  ],
+  fontStyles: [],
+  fontList: []
 };
