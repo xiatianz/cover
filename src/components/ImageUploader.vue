@@ -1,10 +1,10 @@
 <template>
   <div class="flex items-center gap-2">
-    <button @click="showQR = true" class="btn-sky">
+    <button @click="showQR = true" class="btn-secondary">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
       获取外链
     </button>
-    <button @click="resetAll" class="btn-stone" title="重置所有设置">
+    <button @click="resetAll" class="btn-ghost" title="重置所有设置">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
       重置
     </button>
@@ -12,22 +12,22 @@
     <!-- QR Modal -->
     <Teleport to="body">
       <Transition name="modal">
-        <div v-if="showQR" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showQR = false">
-          <div class="relative bg-white/95 dark:bg-stone-800/95 backdrop-blur-sm rounded-2xl w-full max-w-[300px] overflow-hidden shadow-2xl border border-white/60 dark:border-stone-700/60">
+        <div v-if="showQR" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showQR = false">
+          <div class="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl w-full max-w-[300px] overflow-hidden shadow-2xl border border-slate-200/60 dark:border-slate-700/60">
             <div class="p-7">
-              <button @click="showQR = false" class="absolute top-3 right-3 p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg transition-all">
+              <button @click="showQR = false" class="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
               <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 shadow-md shadow-blue-500/25 flex items-center justify-center shadow-sm">
+                  <svg class="w-6 h-6 text-white dark:text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                 </div>
-                <h4 class="text-base font-bold text-stone-800 dark:text-stone-100 mb-1">夏图坞小程序</h4>
-                <p class="text-xs text-stone-400 dark:text-stone-500 mb-5">微信扫码上传获取外链</p>
-                <div class="inline-block p-2.5 bg-white dark:bg-stone-700 rounded-xl shadow border border-stone-100 dark:border-stone-600">
+                <h4 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">夏图坞小程序</h4>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mb-5">微信扫码上传获取外链</p>
+                <div class="inline-block p-2.5 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-slate-100 dark:border-slate-600">
                   <img src="/gh_7b56ae2626fe_258.jpg" alt="小程序二维码" class="w-44 h-44 rounded-lg object-cover" />
                 </div>
-                <p class="mt-4 text-xs text-stone-400 dark:text-stone-500">长按识别二维码</p>
+                <p class="mt-4 text-xs text-slate-400 dark:text-slate-500">长按识别二维码</p>
               </div>
             </div>
           </div>
@@ -76,8 +76,8 @@ function resetAll() {
 </script>
 
 <style scoped>
-.btn-sky { @apply inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg text-xs font-semibold hover:from-sky-600 hover:to-blue-700 transition-all shadow-md; }
-.btn-stone { @apply inline-flex items-center gap-1.5 px-3 py-2 bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 rounded-lg text-xs font-semibold hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200 transition-all; }
+.btn-secondary { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all; }
+.btn-ghost { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all; }
 .modal-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
 .modal-leave-active { transition: all .2s cubic-bezier(.4,0,1,1); }
 .modal-enter-from, .modal-leave-to { opacity:0; transform:scale(.96) translateY(8px); }

@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden p-3 bg-stone-100/50 dark:bg-stone-900/50">
+  <div class="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden p-3 bg-slate-100/50 dark:bg-slate-900/50">
     <div class="w-full h-full flex items-center justify-center">
       <canvas
         id="canvasPreview"

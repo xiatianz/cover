@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex flex-col overflow-hidden bg-stone-50 dark:bg-stone-950 transition-colors duration-300">
+  <div class="h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
     <HeaderComponent class="shrink-0" />
     <CoverGenerator class="flex-1 min-h-0" />
     <FooterComponent class="shrink-0" />

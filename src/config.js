@@ -13,6 +13,7 @@ export const defaultConfig = {
     { label: 'Arial', value: 'Arial' }
   ],
   fontStyles: [
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
     'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap',
     'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap',
     'https://fonts.googleapis.com/css2?family=LXGW+WenKai:wght@400;700&display=swap',
