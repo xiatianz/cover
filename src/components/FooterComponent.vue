@@ -1,157 +1,92 @@
 <template>
-  <footer class="sm:mt-12 mb-2 text-center text-xs sm:text-sm">
-    <div class="flex flex-wrap justify-center gap-x-2 gap-y-1">
-      <span>富强</span>
-      <span>民主</span>
-      <span>文明</span>
-      <span>和谐</span>
-      <span>自由</span>
-      <span>平等</span>
-      <span>公正</span>
-      <span>法治</span>
-      <span>爱国</span>
-      <span>敬业</span>
-      <span>诚信</span>
-      <span>友善</span>
-    </div>
-    <div class="mt-2 space-x-2">
+  <footer class="py-2 px-5 flex justify-between items-center text-xs text-stone-400 dark:text-stone-500 bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm border-t border-stone-200/30 dark:border-stone-700/30 shrink-0">
+    <div class="flex items-center gap-2">
       <span>© 2024</span>
-      <a href="https://ehon.cn" 
-         target="_blank"
-         class="font-bold text-green-600 hover:text-gray-600 transition-colors">Cover-Wave</a>
-      <div class="inline-flex items-center gap-1">
-        <a v-if="icpNumber"
-           href="https://beian.miit.gov.cn/" 
-           target="_blank"
-           class="font-bold text-green-600 hover:text-gray-600 transition-colors">{{ icpNumber }}</a>
-        <a v-if="policeNumber"
-           :href="`https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=${policeNumber.match(/\d+/)[0]}`"
-           target="_blank"
-           class="font-bold text-green-600 hover:text-gray-600 transition-colors flex items-center gap-1">
-          <img :src="policeIconPath" alt="公安备案图标" class="w-4 h-4 inline-block">
-          {{ policeNumber }}
-        </a>
-      </div>
-      <button class="text-pink-500 font-bold" @click="toggleTips">小提示</button>
-      <button class="text-blue-500 font-bold" @click="toggleIconTutorial">图标教程</button>
+      <a href="https://ehon.cn" target="_blank" class="text-stone-500 dark:text-stone-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium">Cover-Wave</a>
+      <span v-if="icpNumber" class="hidden sm:inline">
+        <a href="https://beian.miit.gov.cn/" target="_blank" class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors">{{ icpNumber }}</a>
+      </span>
+      <span v-if="policeNumber" class="hidden sm:inline-flex items-center gap-1">
+        <img :src="policeIconPath" alt="" class="w-3 h-3" />
+        <a :href="`https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=${policeNumber.match(/\d+/)[0]}`" target="_blank" class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors">{{ policeNumber }}</a>
+      </span>
     </div>
-    
-    <!-- 小提示弹窗 -->
-    <div class="fixed top-0 left-1/2 w-[90%] max-w-[600px] max-h-[82px] p-[10px] mt-[10px] bg-white text-[#333] rounded-[10px] shadow-[0_4px_8px_#0000001a] z-100 flex flex-col justify-center items-center text-center overflow-hidden transition-all duration-300 ease-in-out"
-         :style="{
-           opacity: showTipsPopup ? 1 : 0,
-           visibility: showTipsPopup ? 'visible' : 'hidden',
-           transform: `translate(-50%) translateY(${showTipsPopup ? '0' : '-20px'})`
-         }"
-    >
-      <div class="flex flex-col text-base items-center justify-center">
-        <span>为避免性能问题，建议不要连续做图</span>
-        <span>建议经常<a href="/" class="text-green-600 hover:text-gray-800 transition-colors">刷新页面</a>优化性能</span>
-        <span class="text-red-500 font-bold">重要提示：请确保您的浏览器和设备性能良好</span>
-      </div>
+    <div class="flex items-center gap-3">
+      <button class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium" @click="toggleTips">提示</button>
+      <button class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium" @click="showTutorial = true">教程</button>
     </div>
 
-    <!-- 图标教程弹窗 -->
-    <div v-if="showIconTutorial" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showIconTutorial = false">
-      <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" @click.stop>
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">图标使用教程</h3>
-          <button @click="showIconTutorial = false" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+    <!-- Tips toast - teleported to body -->
+    <Teleport to="body">
+      <Transition name="toast">
+        <div v-if="showTips" class="fixed top-5 left-1/2 -translate-x-1/2 bg-stone-800/90 dark:bg-stone-700/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl shadow-lg z-50 text-sm whitespace-nowrap font-medium">
+          为避免性能问题，建议不要连续做图，经常刷新页面
         </div>
-        
-        <div class="space-y-4">
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="font-medium text-gray-800 mb-2">🎯 获取图标的方法</h4>
-            <div class="space-y-2 text-sm text-gray-600">
-              <p><strong>方法一：</strong>点进入 <span class="bg-red-100 text-red-700 px-1 rounded">图标库</span> 之后复制图标代码，输入图标名称</p>
-              <p><strong>方法二：</strong>使用 Iconify、Feather Icons、Heroicons 等图标库</p>
-              <p><strong>方法三：</strong>上传本地 PNG、SVG 格式的图标文件</p>
-            </div>
-          </div>
+      </Transition>
+    </Teleport>
 
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="font-medium text-gray-800 mb-2">📝 图标库使用步骤</h4>
-            <div class="space-y-2 text-sm text-gray-600">
-              <div class="flex items-center gap-2">
-                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">1</span>
-                <span>访问图标库网站（如 iconify.design）</span>
+    <!-- Tutorial modal - teleported to body -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showTutorial" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click="showTutorial = false">
+          <div class="bg-white/95 dark:bg-stone-800/95 backdrop-blur-sm rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-white/60 dark:border-stone-700/60" @click.stop>
+            <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-sm font-bold text-stone-800 dark:text-stone-100">图标使用教程</h3>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</span>
-                <span>搜索并选择喜欢的图标</span>
+              <button @click="showTutorial = false" class="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div class="space-y-3 text-xs text-stone-600 dark:text-stone-300">
+              <div class="p-3.5 bg-stone-50/80 dark:bg-stone-700/50 rounded-xl border border-stone-100 dark:border-stone-600">
+                <p class="font-semibold text-stone-700 dark:text-stone-200 mb-1.5">获取图标</p>
+                <p>点击「图标库」复制图标代码（如 logos:chrome），粘贴到输入框即可</p>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">3</span>
-                <span>复制图标代码（如：logos:chrome）</span>
+              <div class="p-3.5 bg-stone-50/80 dark:bg-stone-700/50 rounded-xl border border-stone-100 dark:border-stone-600">
+                <p class="font-semibold text-stone-700 dark:text-stone-200 mb-1.5">调整功能</p>
+                <p>拖拽移动 · 滑块调整大小 · 修改颜色 · 360度旋转</p>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="bg-blue-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">4</span>
-                <span>在本工具中输入图标名称</span>
+              <div class="p-3.5 bg-stone-50/80 dark:bg-stone-700/50 rounded-xl border border-stone-100 dark:border-stone-600">
+                <p class="font-semibold text-stone-700 dark:text-stone-200 mb-1.5">推荐图标库</p>
+                <p>iconify.design · feathericons.com · heroicons.com · tabler-icons.io</p>
               </div>
             </div>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="font-medium text-gray-800 mb-2">🎨 图标调整功能</h4>
-            <div class="space-y-2 text-sm text-gray-600">
-              <p>• <strong>拖拽移动：</strong>点击图标可以拖拽调整位置</p>
-              <p>• <strong>尺寸调整：</strong>使用右侧滑块调整图标大小</p>
-              <p>• <strong>颜色修改：</strong>可以修改图标颜色和背景色</p>
-              <p>• <strong>旋转角度：</strong>支持360度旋转调整</p>
-            </div>
-          </div>
-
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 class="font-medium text-yellow-800 mb-2">💡 推荐图标库</h4>
-            <div class="space-y-1 text-sm text-yellow-700">
-              <p>• <strong>Iconify：</strong>iconify.design（最全面）</p>
-              <p>• <strong>Feather Icons：</strong>feathericons.com（简洁风格）</p>
-              <p>• <strong>Heroicons：</strong>heroicons.com（现代设计）</p>
-              <p>• <strong>Tabler Icons：</strong>tabler-icons.io（线性图标）</p>
+            <div class="mt-5 flex justify-end">
+              <button @click="showTutorial = false" class="btn-ok">知道了</button>
             </div>
           </div>
         </div>
-
-        <div class="mt-6 flex justify-end">
-          <button 
-            @click="showIconTutorial = false"
-            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
-          >
-            我知道了
-          </button>
-        </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
   </footer>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      showTipsPopup: false,
-      showIconTutorial: false,
-      icpNumber: import.meta.env.VITE_APP_ICP_NUMBER,
-      policeNumber: import.meta.env.VITE_APP_POLICE_NUMBER,
-      policeIconPath: import.meta.env.VITE_APP_POLICE_ICON_PATH || '/tb.png'
-    };
-  },
-  methods: {
-    toggleTips() {
-      this.showTipsPopup = !this.showTipsPopup;
-      if (this.showTipsPopup) {
-        setTimeout(() => {
-          this.showTipsPopup = false;
-        }, 3000);
-      }
-    },
-    toggleIconTutorial() {
-      this.showIconTutorial = !this.showIconTutorial;
-    }
-  }
-};
+<script setup>
+import { ref } from 'vue'
+const showTips = ref(false)
+const showTutorial = ref(false)
+const icpNumber = import.meta.env.VITE_APP_ICP_NUMBER
+const policeNumber = import.meta.env.VITE_APP_POLICE_NUMBER
+const policeIconPath = import.meta.env.VITE_APP_POLICE_ICON_PATH || '/tb.png'
+
+let tipsTimer = null
+function toggleTips() {
+  showTips.value = true
+  clearTimeout(tipsTimer)
+  tipsTimer = setTimeout(() => { showTips.value = false }, 3000)
+}
 </script>
+
+<style scoped>
+.btn-ok { @apply px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md; }
+.toast-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
+.toast-leave-active { transition: all .2s ease-in; }
+.toast-enter-from, .toast-leave-to { opacity:0; transform:translate(-50%,-16px); }
+.modal-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
+.modal-leave-active { transition: all .2s cubic-bezier(.4,0,1,1); }
+.modal-enter-from, .modal-leave-to { opacity:0; transform:scale(.96) translateY(8px); }
+</style>
