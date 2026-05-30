@@ -19,7 +19,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
               <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 shadow-md shadow-blue-500/25 flex items-center justify-center shadow-sm">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-rose-400 via-orange-500 to-amber-500 shadow-md shadow-orange-500/25 flex items-center justify-center shadow-sm">
                   <svg class="w-6 h-6 text-white dark:text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                 </div>
                 <h4 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">夏图坞小程序</h4>
@@ -76,8 +76,8 @@ function resetAll() {
 </script>
 
 <style scoped>
-.btn-secondary { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all; }
-.btn-ghost { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all; }
+.btn-secondary { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-rose-600 dark:text-orange-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all; }
+.btn-ghost { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-rose-500 dark:text-orange-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-orange-300 transition-all; }
 .modal-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
 .modal-leave-active { transition: all .2s cubic-bezier(.4,0,1,1); }
 .modal-enter-from, .modal-leave-to { opacity:0; transform:scale(.96) translateY(8px); }
