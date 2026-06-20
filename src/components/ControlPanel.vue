@@ -6,7 +6,7 @@
       <div class="flex items-center gap-1.5 mb-1">
         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
         <span class="section-title">配色</span>
-        <button @click="saveCurrentPreset" class="ml-auto text-[10px] text-rose-400 hover:text-rose-600 dark:hover:text-orange-300 font-medium transition-colors">+ 收藏</button>
+        <button @click="saveCurrentPreset" class="ml-auto text-[10px] text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors">+ 收藏</button>
       </div>
       <div class="flex gap-1 flex-wrap">
         <button v-for="p in presets" :key="p.name" @click="applyPreset(p)" :title="p.name"
@@ -315,24 +315,24 @@ async function doCopy() {
 .lbl { @apply whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400 font-medium w-9 shrink-0; }
 .vb { @apply text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1 rounded min-w-[22px] text-center; }
 
-.ctrl { @apply px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-rose-400 dark:focus:border-orange-500 focus:ring-2 focus:ring-rose-200/50 dark:focus:ring-rose-900/50 transition-all; }
+.ctrl { @apply px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200/50 dark:focus:ring-indigo-900/50 transition-all; }
 
 .preset-swatch { @apply w-6 h-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-125 hover:shadow-md transition-all cursor-pointer; }
 
-.btn-primary { @apply px-2.5 py-1.5 rounded-md text-[11px] font-medium text-white bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 transition-all shadow-md shadow-rose-500/25; }
+.btn-primary { @apply px-2.5 py-1.5 rounded-md text-[11px] font-medium text-white bg-indigo-500 hover:bg-indigo-600 transition-all shadow-md shadow-indigo-500/25; }
 
-.btn-accent { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all; }
+.btn-accent { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all; }
 
-.btn-secondary { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all; }
+.btn-secondary { @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all; }
 
-.btn-ghost { @apply px-2.5 py-1.5 rounded-md text-[11px] font-medium text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-orange-300 transition-all; }
+.btn-ghost { @apply px-2.5 py-1.5 rounded-md text-[11px] font-medium text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all; }
 
-.btn-icon { @apply p-1.5 rounded-md text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-orange-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all; }
+.btn-icon { @apply p-1.5 rounded-md text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all; }
 
-.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 transition-all shadow-md shadow-rose-500/25; }
+.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white bg-indigo-500 hover:bg-indigo-600 transition-all shadow-md shadow-indigo-500/25; }
 
 .format-btn { @apply flex-1 px-1.5 py-1 rounded-md text-[11px] font-medium transition-all; }
-.format-btn-active { @apply bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-md shadow-rose-500/25; }
+.format-btn-active { @apply bg-indigo-500 text-white shadow-md shadow-indigo-500/25; }
 .format-btn-inactive { @apply bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700; }
 
 .fade-enter-active { transition: all .2s ease; }

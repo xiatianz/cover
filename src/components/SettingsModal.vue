@@ -8,7 +8,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between p-5 border-b border-stone-100 dark:border-stone-700">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
                   <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <h3 class="text-sm font-bold text-stone-800 dark:text-stone-100">选择平台尺寸</h3>
@@ -22,11 +22,11 @@
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 <div v-for="p in platforms" :key="p.id" @click="selectPlatform(p)"
                   class="group p-3.5 border rounded-xl cursor-pointer transition-all text-center"
-                  :class="selected?.id === p.id ? 'border-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/20 shadow-[0_0_0_3px_rgba(16,185,129,0.08)]' : 'border-stone-200/80 dark:border-stone-700/80 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50/50 dark:hover:bg-stone-800/50'">
+                  :class="selected?.id === p.id ? 'border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20 shadow-[0_0_0_3px_rgba(99,102,241,0.08)]' : 'border-stone-200/80 dark:border-stone-700/80 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50/50 dark:hover:bg-stone-800/50'">
                   <div class="text-xl mb-1.5 transition-transform group-hover:scale-110">{{ p.icon }}</div>
                   <h5 class="font-semibold text-stone-700 dark:text-stone-200 text-xs">{{ p.name }}</h5>
                   <p class="text-xs text-stone-400 dark:text-stone-500 mt-0.5">{{ p.width }}×{{ p.height }}</p>
-                  <div v-if="selected?.id === p.id" class="text-emerald-500 mt-1.5">
+                  <div v-if="selected?.id === p.id" class="text-indigo-500 mt-1.5">
                     <svg class="w-4 h-4 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                   </div>
                 </div>
@@ -35,7 +35,7 @@
             </div>
             <!-- Footer -->
             <div class="flex justify-end p-4 border-t border-stone-100 dark:border-stone-700">
-              <button @click="$emit('update:modelValue', false)" class="px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md">完成</button>
+              <button @click="$emit('update:modelValue', false)" class="px-5 py-2 text-xs font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition-all shadow-md">完成</button>
             </div>
           </div>
         </Transition>

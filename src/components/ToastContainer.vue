@@ -21,9 +21,9 @@ import { useToast } from '../composables/useToast'
 const { toasts } = useToast()
 function typeClass(t) {
   return {
-    'bg-emerald-600/90 text-white': t === 'success',
+    'bg-green-600/90 text-white': t === 'success',
     'bg-red-500/90 text-white': t === 'error',
-    'bg-stone-700/90 text-white dark:bg-stone-600/90': !t || t === 'info'
+    'bg-indigo-500/90 text-white dark:bg-indigo-600/90': !t || t === 'info'
   }
 }
 </script>
