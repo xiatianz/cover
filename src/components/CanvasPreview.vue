@@ -14,10 +14,10 @@
     </div>
     <!-- Drop zone highlights -->
     <Transition name="hl">
-      <div v-if="dragZone === 'icon'" class="pointer-events-none absolute left-1/2 top-1/2 w-[200px] h-[200px] -translate-x-1/2 -translate-y-1/2 border-[3px] border-dashed border-indigo-400 rounded-3xl z-10"></div>
+      <div v-if="dragZone === 'icon'" class="pointer-events-none absolute left-1/2 top-1/2 w-[200px] h-[200px] -translate-x-1/2 -translate-y-1/2 border-[3px] border-dashed border-[#409eff] rounded-3xl z-10"></div>
     </Transition>
     <Transition name="hl">
-      <div v-if="dragZone === 'bg'" class="pointer-events-none absolute inset-3 border-[3px] border-dashed border-indigo-400 rounded-xl z-9"></div>
+      <div v-if="dragZone === 'bg'" class="pointer-events-none absolute inset-3 border-[3px] border-dashed border-[#409eff] rounded-xl z-9"></div>
     </Transition>
   </div>
 </template>

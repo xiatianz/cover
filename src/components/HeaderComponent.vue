@@ -13,7 +13,7 @@
     <!-- Center: Title -->
     <div class="flex-1 flex justify-center">
       <div class="flex items-center gap-1.5 sm:gap-2.5">
-        <div class="w-7 h-7 rounded-lg bg-indigo-400 flex items-center justify-center shadow-md shadow-indigo-400/25">
+        <div class="w-7 h-7 rounded-lg bg-[#409eff] flex items-center justify-center shadow-md shadow-[#409eff]/25">
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
@@ -74,6 +74,6 @@ const canRedoVal = canRedo
 
 <style scoped>
 .header-btn {
-  @apply p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95;
+  @apply p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-[#ecf5ff] dark:hover:bg-[#18222c] hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95;
 }
 </style>

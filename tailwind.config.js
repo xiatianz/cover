@@ -8,11 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#475569',       // slate-600
-        'primary-dark': '#334155', // slate-700
-        secondary: '#64748b',      // slate-500
-        accent: '#818cf8',         // indigo-400
-        'accent-dark': '#a5b4fc',  // indigo-300
+        primary: '#409eff',
+        'primary-dark': '#3a8ee6',
+        secondary: '#909399',
+        accent: '#ecf5ff',
+        'accent-dark': '#d9ecff',
+        'dark-accent': '#1a2332',
+        'dark-accent-dark': '#0d1520',
       },
       fontFamily: {
         sans: ['var(--vue-app-font-family)'],

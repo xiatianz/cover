@@ -315,24 +315,24 @@ async function doCopy() {
 .lbl { @apply whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400 font-medium w-9 shrink-0; }
 .vb { @apply text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-md min-w-[24px] text-center; }
 
-.ctrl { @apply px-2.5 py-1.5 border border-slate-200/80 dark:border-slate-700/80 rounded-lg text-xs bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 placeholder:text-slate-400/60 outline-none focus:border-slate-300 dark:focus:border-slate-600 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.03)] dark:focus:shadow-[0_0_0_2px_rgba(255,255,255,0.03)] transition-all duration-150; }
+.ctrl { @apply px-2.5 py-1.5 border border-slate-200/80 dark:border-slate-700/80 rounded-lg text-xs bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 placeholder:text-slate-400/60 outline-none focus:border-[#409eff] dark:focus:border-[#409eff] focus:shadow-[0_0_0_2px_rgba(64,158,255,0.1)] dark:focus:shadow-[0_0_0_2px_rgba(64,158,255,0.1)] transition-all duration-150; }
 
 .preset-swatch { @apply w-6 h-6 rounded-lg border border-white/80 dark:border-slate-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] hover:scale-110 transition-all duration-200 cursor-pointer; }
 
-.btn-primary { @apply px-3.5 py-1.5 rounded-lg text-[11px] font-medium text-white bg-gradient-to-b from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
+.btn-primary { @apply px-3.5 py-1.5 rounded-lg text-[11px] font-medium text-white bg-[#409eff] hover:bg-[#66b1ff] active:bg-[#3a8ee6] shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
 
-.btn-accent { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
+.btn-accent { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-[#409eff] dark:text-[#409eff] bg-[#ecf5ff] dark:bg-[#18222c] border border-[#d9ecff] dark:border-[#2a3a4a] hover:bg-[#d9ecff] dark:hover:bg-[#2a3a4a] shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
 
 .btn-secondary { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
 
-.btn-ghost { @apply px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-150; }
+.btn-ghost { @apply px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-[#ecf5ff] dark:hover:bg-[#18222c] hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-150; }
 
 .btn-icon { @apply p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-150; }
 
-.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium text-white bg-gradient-to-b from-indigo-400 to-indigo-500 hover:from-indigo-300 hover:to-indigo-400 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
+.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium text-white bg-[#409eff] hover:bg-[#66b1ff] active:bg-[#3a8ee6] shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
 
 .format-btn { @apply flex-1 px-1.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150; }
-.format-btn-active { @apply bg-gradient-to-b from-slate-600 to-slate-700 dark:from-slate-200 dark:to-slate-300 text-white dark:text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)]; }
+.format-btn-active { @apply bg-[#409eff] text-white shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)]; }
 .format-btn-inactive { @apply bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-slate-700/80; }
 
 .fade-enter-active { transition: all .2s ease; }
