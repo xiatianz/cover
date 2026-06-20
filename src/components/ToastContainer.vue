@@ -23,7 +23,7 @@ function typeClass(t) {
   return {
     'bg-green-600/90 text-white': t === 'success',
     'bg-red-500/90 text-white': t === 'error',
-    'bg-indigo-500/90 text-white dark:bg-indigo-600/90': !t || t === 'info'
+    'bg-slate-600/90 text-white dark:bg-slate-700/90': !t || t === 'info'
   }
 }
 </script>

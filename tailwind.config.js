@@ -8,9 +8,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#6366f1',       // indigo-500
-        'primary-dark': '#4f46e5', // indigo-600
-        secondary: '#4f46e5',      // indigo-600
+        primary: '#475569',       // slate-600
+        'primary-dark': '#334155', // slate-700
+        secondary: '#64748b',      // slate-500
         accent: '#818cf8',         // indigo-400
         'accent-dark': '#a5b4fc',  // indigo-300
       },
