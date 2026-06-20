@@ -8,7 +8,7 @@
         @dragover.prevent="onDragOver"
         @dragleave.prevent="dragZone = null"
         @drop.prevent="onDrop"
-        class="max-w-full max-h-full rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_32px_rgba(0,0,0,0.06)] border border-white/80 dark:border-stone-700/60 bg-white dark:bg-stone-800"
+        class="max-w-full max-h-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_8px_rgba(0,0,0,0.06),0_8px_32px_rgba(0,0,0,0.06)] border border-white/80 dark:border-slate-700/60 bg-white dark:bg-slate-800"
         style="object-fit:contain"
       ></canvas>
     </div>

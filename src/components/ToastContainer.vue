@@ -4,7 +4,7 @@
       <div
         v-for="t in toasts"
         :key="t.id"
-        class="pointer-events-auto px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg backdrop-blur-sm flex items-center gap-2 min-w-[160px]"
+        class="pointer-events-auto px-4 py-2.5 rounded-xl text-sm font-medium shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-sm flex items-center gap-2 min-w-[160px]"
         :class="typeClass(t.type)"
       >
         <span v-if="t.type==='success'" class="text-base">✓</span>

@@ -13,9 +13,9 @@
     <Teleport to="body">
       <Transition name="modal">
         <div v-if="showQR" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showQR = false">
-          <div class="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl w-full max-w-[300px] overflow-hidden shadow-2xl border border-slate-200/60 dark:border-slate-700/60">
+          <div class="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl w-full max-w-[300px] overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.1)] border border-slate-200/50 dark:border-slate-700/50">
             <div class="p-7">
-              <button @click="showQR = false" class="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-all">
+              <button @click="showQR = false" class="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-all duration-150 active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
               <div class="text-center">
@@ -24,7 +24,7 @@
                 </div>
                 <h4 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">夏图坞小程序</h4>
                 <p class="text-xs text-slate-400 dark:text-slate-500 mb-5">微信扫码上传获取外链</p>
-                <div class="inline-block p-2.5 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-slate-100 dark:border-slate-600">
+                <div class="inline-block p-2.5 bg-white dark:bg-slate-700 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-slate-100/80 dark:border-slate-600/80">
                   <img src="/gh_7b56ae2626fe_258.jpg" alt="小程序二维码" class="w-44 h-44 rounded-lg object-cover" />
                 </div>
                 <p class="mt-4 text-xs text-slate-400 dark:text-slate-500">长按识别二维码</p>
@@ -76,8 +76,8 @@ function resetAll() {
 </script>
 
 <style scoped>
-.btn-secondary { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all; }
-.btn-ghost { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all; }
+.btn-secondary { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
+.btn-ghost { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-150; }
 .modal-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
 .modal-leave-active { transition: all .2s cubic-bezier(.4,0,1,1); }
 .modal-enter-from, .modal-leave-to { opacity:0; transform:scale(.96) translateY(8px); }

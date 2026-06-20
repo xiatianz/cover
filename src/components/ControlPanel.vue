@@ -1,32 +1,32 @@
 <template>
-  <aside class="w-full lg:w-[440px] lg:shrink-0 flex flex-col bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2),0_4px_16px_rgba(0,0,0,0.2)] border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+  <aside class="w-full lg:w-[440px] lg:shrink-0 flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_1px_3px_rgba(0,0,0,0.3),0_8px_24px_rgba(0,0,0,0.3)] border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
 
     <!-- Quick Presets -->
-    <div class="px-3 py-1.5 border-b border-slate-200/60 dark:border-slate-700/60 shrink-0">
+    <div class="px-3 py-1.5 border-b border-slate-200/50 dark:border-slate-700/50 shrink-0">
       <div class="flex items-center gap-1.5 mb-1">
         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
         <span class="section-title">配色</span>
-        <button @click="saveCurrentPreset" class="ml-auto text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium transition-colors">+ 收藏</button>
+        <button @click="saveCurrentPreset" class="ml-auto text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium transition-colors duration-150">+ 收藏</button>
       </div>
       <div class="flex gap-1 flex-wrap">
         <button v-for="p in presets" :key="p.name" @click="applyPreset(p)" :title="p.name"
           class="preset-swatch"
           :style="{ background: p.swatch }"></button>
       </div>
-      <div v-if="savedPresets.length" class="mt-1.5 pt-1.5 border-t border-slate-200/40 dark:border-slate-700/40 flex items-center gap-1 flex-wrap">
+      <div v-if="savedPresets.length" class="mt-1.5 pt-1.5 border-t border-slate-200/30 dark:border-slate-700/30 flex items-center gap-1 flex-wrap">
         <span class="text-[9px] text-slate-400">收藏:</span>
         <div v-for="(sp, idx) in savedPresets" :key="idx" class="relative group">
           <button @click="applySavedPreset(sp)" :title="sp.name"
             class="preset-swatch"
             :style="{ background: sp.swatch }"></button>
           <button @click="removeSavedPreset(idx)"
-            class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white rounded-full text-[6px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+            class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white rounded-full text-[6px] leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-sm">✕</button>
         </div>
       </div>
     </div>
 
     <!-- Controls - all in one scrollable area -->
-    <div class="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-200/60 dark:divide-slate-700/60">
+    <div class="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-200/50 dark:divide-slate-700/50">
 
       <!-- 素材 + 背景 combined row -->
       <div class="section-block">
@@ -309,31 +309,31 @@ async function doCopy() {
 <style scoped>
 .section-block { @apply px-3 py-2 space-y-1.5; }
 .section-header { @apply flex items-center gap-1.5 mb-1; }
-.section-icon { @apply w-3.5 h-3.5 text-stone-400; }
-.section-title { @apply text-sm font-bold text-stone-800 dark:text-stone-100 tracking-wide; font-family: "Inter", "Noto Sans SC", sans-serif; }
+.section-icon { @apply w-3.5 h-3.5 text-slate-400; }
+.section-title { @apply text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider; font-family: "Inter", "Noto Sans SC", sans-serif; }
 
 .lbl { @apply whitespace-nowrap text-[11px] text-slate-500 dark:text-slate-400 font-medium w-9 shrink-0; }
-.vb { @apply text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1 rounded min-w-[22px] text-center; }
+.vb { @apply text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-md min-w-[24px] text-center; }
 
-.ctrl { @apply px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-indigo-300 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/40 dark:focus:ring-indigo-900/40 transition-all; }
+.ctrl { @apply px-2.5 py-1.5 border border-slate-200/80 dark:border-slate-700/80 rounded-lg text-xs bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 placeholder:text-slate-400/60 outline-none focus:border-slate-300 dark:focus:border-slate-600 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.03)] dark:focus:shadow-[0_0_0_2px_rgba(255,255,255,0.03)] transition-all duration-150; }
 
-.preset-swatch { @apply w-6 h-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm hover:scale-125 hover:shadow-md transition-all cursor-pointer; }
+.preset-swatch { @apply w-6 h-6 rounded-lg border border-white/80 dark:border-slate-800/80 shadow-[0_1px_2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] hover:scale-110 transition-all duration-200 cursor-pointer; }
 
-.btn-primary { @apply px-3 py-1.5 rounded-md text-[11px] font-medium text-white bg-slate-700 hover:bg-slate-800 transition-all shadow-sm; }
+.btn-primary { @apply px-3.5 py-1.5 rounded-lg text-[11px] font-medium text-white bg-gradient-to-b from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.15)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
 
-.btn-accent { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all; }
+.btn-accent { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
 
-.btn-secondary { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all; }
+.btn-secondary { @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-850 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-[0_1px_1px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.08)] transition-all duration-150; }
 
-.btn-ghost { @apply px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all; }
+.btn-ghost { @apply px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-150; }
 
-.btn-icon { @apply p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all; }
+.btn-icon { @apply p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all duration-150; }
 
-.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-medium text-white bg-indigo-400 hover:bg-indigo-500 transition-all shadow-sm; }
+.btn-save { @apply inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium text-white bg-gradient-to-b from-indigo-400 to-indigo-500 hover:from-indigo-300 hover:to-indigo-400 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
 
-.format-btn { @apply flex-1 px-1.5 py-1 rounded-md text-[11px] font-medium transition-all; }
-.format-btn-active { @apply bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-800 shadow-sm; }
-.format-btn-inactive { @apply bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700; }
+.format-btn { @apply flex-1 px-1.5 py-1 rounded-lg text-[11px] font-medium transition-all duration-150; }
+.format-btn-active { @apply bg-gradient-to-b from-slate-600 to-slate-700 dark:from-slate-200 dark:to-slate-300 text-white dark:text-slate-800 shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.1)]; }
+.format-btn-inactive { @apply bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-slate-700/80; }
 
 .fade-enter-active { transition: all .2s ease; }
 .fade-leave-active { transition: all .15s ease; }

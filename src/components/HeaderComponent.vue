@@ -1,5 +1,5 @@
 <template>
-  <header class="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 shrink-0">
+  <header class="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 shrink-0">
     <!-- Left: Undo/Redo -->
     <div class="flex items-center gap-1.5 w-auto lg:w-[200px]">
       <button @click="undo" :disabled="!canUndoVal" class="header-btn" title="撤销 (Ctrl+Z)">
@@ -21,7 +21,7 @@
         <h1 class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100 tracking-tight select-none" style="font-family: Inter, sans-serif">
           Cover-Wave
         </h1>
-        <span class="hidden sm:inline text-[9px] text-slate-400 dark:text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">v2.0</span>
+        <span class="hidden sm:inline text-[9px] text-slate-400 dark:text-slate-500 font-medium bg-slate-100/80 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-full border border-slate-200/40 dark:border-slate-700/40">v2.0</span>
       </div>
     </div>
 
@@ -42,16 +42,16 @@
     <!-- Shortcuts popup -->
     <Transition name="dropdown">
       <div v-if="showShortcuts" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showShortcuts=false">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-700">
+        <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl p-5 max-w-sm w-full shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.1)] border border-slate-200/50 dark:border-slate-700/50">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">快捷键</h3>
-            <button @click="showShortcuts=false" class="p-1 text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 rounded"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <button @click="showShortcuts=false" class="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg transition-all duration-150 active:scale-95"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
           </div>
           <div class="space-y-2 text-xs">
-            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">撤销</span><kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">Ctrl+Z</kbd></div>
-            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">重做</span><kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">Ctrl+Shift+Z</kbd></div>
-            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">保存图片</span><kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">Ctrl+S</kbd></div>
-            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">复制到剪贴板</span><kbd class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 font-mono">Ctrl+C</kbd></div>
+            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">撤销</span><kbd class="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-700/80 rounded-md text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200/50 dark:border-slate-600/50">Ctrl+Z</kbd></div>
+            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">重做</span><kbd class="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-700/80 rounded-md text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200/50 dark:border-slate-600/50">Ctrl+Shift+Z</kbd></div>
+            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">保存图片</span><kbd class="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-700/80 rounded-md text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200/50 dark:border-slate-600/50">Ctrl+S</kbd></div>
+            <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">复制到剪贴板</span><kbd class="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-700/80 rounded-md text-slate-600 dark:text-slate-300 font-mono text-[11px] border border-slate-200/50 dark:border-slate-600/50">Ctrl+C</kbd></div>
           </div>
         </div>
       </div>
@@ -74,6 +74,6 @@ const canRedoVal = canRedo
 
 <style scoped>
 .header-btn {
-  @apply p-1.5 rounded-md text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-all disabled:opacity-30 disabled:cursor-not-allowed;
+  @apply p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95;
 }
 </style>

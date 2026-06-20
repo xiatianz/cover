@@ -1,5 +1,5 @@
 <template>
-  <footer class="py-2 px-5 flex justify-between items-center text-xs text-slate-400 dark:text-slate-500 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-t border-slate-200/30 dark:border-slate-700/30 shrink-0">
+  <footer class="py-2 px-5 flex justify-between items-center text-xs text-slate-400 dark:text-slate-500 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/30 dark:border-slate-700/30 shrink-0">
     <div class="flex items-center gap-2">
       <span>© 2024</span>
       <a href="https://ehon.cn" target="_blank" class="text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors font-medium">Cover-Wave</a>
@@ -29,7 +29,7 @@
     <Teleport to="body">
       <Transition name="modal">
         <div v-if="showTutorial" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click="showTutorial = false">
-          <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-slate-200/60 dark:border-slate-700/60" @click.stop>
+          <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.1)] border border-slate-200/50 dark:border-slate-700/50" @click.stop>
             <div class="flex items-center justify-between mb-5">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-indigo-400 shadow-md shadow-indigo-400/25 flex items-center justify-center">
@@ -37,20 +37,20 @@
                 </div>
                 <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">图标使用教程</h3>
               </div>
-              <button @click="showTutorial = false" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-all">
+              <button @click="showTutorial = false" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-all duration-150 active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
             <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
-              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-600">
+              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100/80 dark:border-slate-600/80">
                 <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1.5">获取图标</p>
                 <p>点击「图标库」复制图标代码（如 logos:chrome），粘贴到输入框即可</p>
               </div>
-              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-600">
+              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100/80 dark:border-slate-600/80">
                 <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1.5">调整功能</p>
                 <p>拖拽移动 · 滑块调整大小 · 修改颜色 · 360度旋转</p>
               </div>
-              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-600">
+              <div class="p-3.5 bg-slate-50/80 dark:bg-slate-700/50 rounded-xl border border-slate-100/80 dark:border-slate-600/80">
                 <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1.5">推荐图标库</p>
                 <p>iconify.design · feathericons.com · heroicons.com · tabler-icons.io</p>
               </div>
@@ -82,7 +82,7 @@ function toggleTips() {
 </script>
 
 <style scoped>
-.btn-ok { @apply px-5 py-2 text-xs font-semibold text-white bg-indigo-400 rounded-lg hover:bg-indigo-500 transition-all shadow-sm; }
+.btn-ok { @apply px-5 py-2 text-xs font-semibold text-white bg-gradient-to-b from-indigo-400 to-indigo-500 hover:from-indigo-300 hover:to-indigo-400 rounded-lg shadow-[0_1px_1px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150; }
 .toast-enter-active { transition: all .3s cubic-bezier(.16,1,.3,1); }
 .toast-leave-active { transition: all .2s ease-in; }
 .toast-enter-from, .toast-leave-to { opacity:0; transform:translate(-50%,-16px); }
